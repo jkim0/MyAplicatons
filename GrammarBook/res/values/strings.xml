@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">GrammarBook</string>
+    <string name="hello_world">Hello world!</string>
+    <string name="action_settings">Settings</string>
+    <string name="add_grammar">Add Grammar</string>
+    <string name="my_grammar_list">My Grammar List</string>
+    <string name="test">Test</string><string name="setting">Setting</string>
+    
+
+</resources>
