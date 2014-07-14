@@ -22,6 +22,22 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity
+            android:name=".EditGrammarActivity"
+            android:label="@string/title_activity_edit_grammar" >
+        </activity>
+        <activity
+            android:name=".GrammarListActivity"
+            android:label="@string/title_activity_grammar_list" >
+        </activity>
+        <activity
+            android:name=".GrammarTestActivity"
+            android:label="@string/title_activity_grammar_test" >
+        </activity>
+        <activity
+            android:name=".SettingActivity"
+            android:label="@string/title_activity_setting" >
+        </activity>
     </application>
 
 </manifest>
