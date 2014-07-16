@@ -40,10 +40,13 @@ public class MainActivity extends ActionBarActivity {
 			startActivity(new Intent(this, EditGrammarActivity.class));
 			break;
 		case R.id.btn_main_my_grammar_list:
+			startActivity(new Intent(this, GrammarListActivity.class));
 			break;
 		case R.id.btn_main_test:
+			startActivity(new Intent(this, GrammarTestActivity.class));
 			break;
 		case R.id.btn_main_setting:
+			startActivity(new Intent(this, SettingActivity.class));
 			break;
 		}
 	}
