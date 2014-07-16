@@ -1,6 +1,7 @@
 package com.loyid.grammarbook;
 
 import android.support.v7.app.ActionBarActivity;
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -36,6 +37,7 @@ public class MainActivity extends ActionBarActivity {
 	public void onMainButtonClick(View view) {
 		switch(view.getId()) {
 		case R.id.btn_main_add_grammar:
+			startActivity(new Intent(this, EditGrammarActivity.class));
 			break;
 		case R.id.btn_main_my_grammar_list:
 			break;

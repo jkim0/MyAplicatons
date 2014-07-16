@@ -26,6 +26,7 @@
         android:layout_alignParentLeft="true"
         android:layout_below="@+id/btn_main_add_grammar"
         android:layout_marginLeft="72dp"
+        android:onClick="onMainButtonClick"
         android:text="@string/my_grammar_list" />
 
     <Button

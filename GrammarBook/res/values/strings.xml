@@ -12,5 +12,13 @@
     <string name="title_activity_grammar_list">GrammarListActivity</string>
     <string name="title_activity_grammar_test">GrammarTestActivity</string>
     <string name="title_activity_setting">SettingActivity</string>
+    <string name="label_grammar">Grammar</string>
+    <string name="label_meaning">Meaning</string>
+    <string name="lebel_type">Type</string>
+    <string name="hint_label_grammar">Grammar</string>
+    <string name="hint_label_meanning">meaning of grammar that you inputted</string>
+    <string name="btn_label_add">Add</string>
+    <string name="btn_label_remove">Remove</string>
+    <string name="action_done">Done</string>
 
 </resources>
