@@ -38,13 +38,7 @@
             android:name=".SettingActivity"
             android:label="@string/title_activity_setting" >
         </activity>
-
-        <provider
-            android:name=".GrammarProvider"
-            android:authorities="com.loyid.grammarprovider"
-            android:enabled="true"
-            android:exported="true" >
-        </provider>
+        
     </application>
 
 </manifest>

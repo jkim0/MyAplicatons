@@ -49,6 +49,7 @@ public class EditGrammarActivity extends ActionBarActivity {
 		Button btn = (Button)item.findViewById(R.id.btn_remove);
 		btn.setTag(mAddedItemList.getChildCount());
 		mAddedItemList.addView(item);
+		recalculateIndex();
 	}
 	
 	public void recalculateIndex() {
