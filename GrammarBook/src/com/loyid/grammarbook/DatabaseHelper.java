@@ -42,7 +42,7 @@ public class DatabaseHelper extends SQLiteOpenHelper
 				+ GrammarProviderContract.Meanings.COLUMN_NAME_MODIFIED_DATE + " INTEGER"
 				+ ");");
 		
-		db.execSQL("CREATE TABLE " + GrammarProviderContract.Meanings.TABLE_NAME + " ("
+		db.execSQL("CREATE TABLE " + GrammarProviderContract.Mappings.TABLE_NAME + " ("
 				+ GrammarProviderContract.Mappings._ID + " INTEGER PRIMARY KEY,"
 				+ GrammarProviderContract.Mappings.COLUMN_NAME_GRAMMAR_ID + " INTEGER,"
 				+ GrammarProviderContract.Mappings.COLUMN_NAME_MEANING_ID + " INTEGER"

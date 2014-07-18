@@ -1,6 +1,9 @@
 package com.loyid.grammarbook;
 
 import android.support.v7.app.ActionBarActivity;
+import android.content.ContentValues;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
@@ -16,9 +19,12 @@ public class EditGrammarActivity extends ActionBarActivity {
 	private static final String TAG = "EditGrammarActivity";
 	private LinearLayout mAddedItemList = null;
 
+	private DatabaseHelper mDatabaseHelper = null;
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		
+		mDatabaseHelper = new DatabaseHelper(this);
 		setContentView(R.layout.activity_edit_grammar);
 		mAddedItemList = (LinearLayout)findViewById(R.id.added_item_list);
 		recalculateIndex();
@@ -69,13 +75,100 @@ public class EditGrammarActivity extends ActionBarActivity {
 	
 	public void saveGrammar() {
 		EditText grammar = (EditText)findViewById(R.id.edit_grammar);
-		String strGrammar = grammar.getText().toString();
-		for (int i = 0; i < mAddedItemList.getChildCount(); i++) {
+		String strGrammar = grammar.getText().toString().trim();
+		
+		if (strGrammar == null || strGrammar.length() <= 0) {
+			Log.d(TAG, "failed to save Grammar data because you did not input grammar.");
+			return;
+		}
+		
+		SQLiteDatabase db = mDatabaseHelper.getWritableDatabase();
+		
+		String[] projection = {
+				GrammarProviderContract.Grammars._ID,
+				GrammarProviderContract.Grammars.COLUMN_NAME_GRAMMAR
+		};
+		
+		String selection = GrammarProviderContract.Grammars.COLUMN_NAME_GRAMMAR + " = ?";
+		
+		String[] selectionArgs = { strGrammar };
+		
+		Cursor c = db.query(GrammarProviderContract.Grammars.TABLE_NAME, 
+				projection,
+				selection,
+				selectionArgs,
+				null,
+				null,
+				GrammarProviderContract.Grammars.DEFAULT_SORT_ORDER);
+		
+		int grammarId = -1;
+		if (c != null && c.getCount() > 0) {
+			if (c.moveToFirst()) {
+				int index = c.getColumnIndex(GrammarProviderContract.Grammars._ID);
+				grammarId = c.getInt(index);
+			}
+		}
+		
+		Long now = Long.valueOf(System.currentTimeMillis());
+		
+		StringBuilder sb = null;
+		int count = mAddedItemList.getChildCount();
+		for (int i = 0; i < count; i++) {
 			LinearLayout itemLayout = (LinearLayout)mAddedItemList.getChildAt(i);
 			Spinner spinner = (Spinner)itemLayout.findViewById(R.id.spinner_type);
 			EditText edit = (EditText)itemLayout.findViewById(R.id.edit_meaning);
 			int type = spinner.getSelectedItemPosition();
-			String meaning = edit.getText().toString();
+			String typeStr = (String)spinner.getSelectedItem();
+			String meaning = edit.getText().toString().trim();
+			
+			if (meaning != null && meaning.length() > 0) {
+				ContentValues values = new ContentValues();
+				values.put(GrammarProviderContract.Meanings.COLUMN_NAME_WORD, meaning);
+				values.put(GrammarProviderContract.Meanings.COLUMN_NAME_TYPE, type);
+				values.put(GrammarProviderContract.Meanings.COLUMN_NAME_CREATED_DATE, now);
+				values.put(GrammarProviderContract.Meanings.COLUMN_NAME_MODIFIED_DATE, now);
+				
+				db.insert(GrammarProviderContract.s.TABLE_NAME, null, values);
+				
+				if (sb == null)
+					sb = new StringBuilder();
+				sb.append(type);
+				sb.append("%" + typeStr);
+				sb.append("%" + meaning);
+				
+				if (i != count - 1) {
+					sb.append("$");
+				}
+			}
+		
 		}
+		
+		if (sb != null) {
+			String strMeaning = sb.toString();
+			Log.d(TAG, "############# saveGrammar Grammar = " + strGrammar + " meaning = " + strMeaning);
+			
+			ContentValues values = new ContentValues();
+			values.put(GrammarProviderContract.Grammars.COLUMN_NAME_GRAMMAR, strGrammar);
+			values.put(GrammarProviderContract.Grammars.COLUMN_NAME_MEANING, strMeaning);
+			
+			if (grammarId < 0) {
+				Log.d(TAG, "insrt data");
+				values.put(GrammarProviderContract.Grammars.COLUMN_NAME_CREATED_DATE, now);
+				values.put(GrammarProviderContract.Grammars.COLUMN_NAME_MODIFIED_DATE, now);
+				
+				db.insert(GrammarProviderContract.Grammars.TABLE_NAME, null, values);
+			} else {
+				Log.d(TAG, "update data index = " + grammarId);
+				String whereClause = GrammarProviderContract.Grammars._ID + " = ?";
+				String[] whereArgs = { String.valueOf(grammarId) };
+				values.put(GrammarProviderContract.Grammars.COLUMN_NAME_MODIFIED_DATE, now);
+				
+				db.update(GrammarProviderContract.Grammars.TABLE_NAME, values, whereClause, whereArgs);
+			}			
+		} else {
+			Log.d(TAG, "failed to save Grammar data because there is no meanings");
+		}
+		
+		finish();
 	}
 }
