@@ -101,14 +101,16 @@ public class EditGrammarActivity extends ActionBarActivity {
 				null,
 				GrammarProviderContract.Grammars.DEFAULT_SORT_ORDER);
 		
-		int grammarId = -1;
+		long grammarId = -1;
 		if (c != null && c.getCount() > 0) {
 			if (c.moveToFirst()) {
 				int index = c.getColumnIndex(GrammarProviderContract.Grammars._ID);
-				grammarId = c.getInt(index);
+				grammarId = c.getLong(index);
 			}
 		}
-		
+
+		if (c != null) c.close();
+
 		Long now = Long.valueOf(System.currentTimeMillis());
 		
 		StringBuilder sb = null;
@@ -125,10 +127,42 @@ public class EditGrammarActivity extends ActionBarActivity {
 				ContentValues values = new ContentValues();
 				values.put(GrammarProviderContract.Meanings.COLUMN_NAME_WORD, meaning);
 				values.put(GrammarProviderContract.Meanings.COLUMN_NAME_TYPE, type);
-				values.put(GrammarProviderContract.Meanings.COLUMN_NAME_CREATED_DATE, now);
-				values.put(GrammarProviderContract.Meanings.COLUMN_NAME_MODIFIED_DATE, now);
+
+				selection = GrammarProviderContract.Meanings.COLUMN_NAME_WORD + " = ?"
+						+ " AND " + GrammarProviderContract.Meanings.COLUMN_NAME_TYPE + " = ?";
+
+				selectionArgs = new String[] { meaning, String.valueOf(type) };
 				
-				db.insert(GrammarProviderContract.s.TABLE_NAME, null, values);
+				c = db.query(GrammarProviderContract.Meanings.TABLE_NAME, 
+						null,
+						selection,
+						selectionArgs,
+						null,
+						null,
+						GrammarProviderContract.Meanings.DEFAULT_SORT_ORDER);
+
+				long meaningId = -1;
+				if (c != null && c.getCount() > 0) {
+					if (c.moveToFirst()) {
+						int index = c.getColumnIndex(GrammarProviderContract.Meanings._ID);
+						meaningId = c.getLong(index);
+					}
+				}
+
+				if (c != null) c.close();
+
+				if (meaningId < 0) {
+					Log.d(TAG, "insert meaning");
+					values.put(GrammarProviderContract.Meanings.COLUMN_NAME_CREATED_DATE, now);
+					values.put(GrammarProviderContract.Meanings.COLUMN_NAME_MODIFIED_DATE, now);
+					meaningId = db.insert(GrammarProviderContract.Meanings.TABLE_NAME, null, values);
+				} else {
+					Log.d(TAG, "update meaning index = " + meaningId);
+					String whereClause = GrammarProviderContract.Meanings._ID + " = ?";
+					String[] whereArgs = { String.valueOf(meaningId) };
+					values.put(GrammarProviderContract.Meanings.COLUMN_NAME_MODIFIED_DATE, now);
+					db.update(GrammarProviderContract.Meanings.TABLE_NAME, values, whereClause, whereArgs);
+				}
 				
 				if (sb == null)
 					sb = new StringBuilder();
@@ -152,13 +186,13 @@ public class EditGrammarActivity extends ActionBarActivity {
 			values.put(GrammarProviderContract.Grammars.COLUMN_NAME_MEANING, strMeaning);
 			
 			if (grammarId < 0) {
-				Log.d(TAG, "insrt data");
+				Log.d(TAG, "insert grammar");
 				values.put(GrammarProviderContract.Grammars.COLUMN_NAME_CREATED_DATE, now);
 				values.put(GrammarProviderContract.Grammars.COLUMN_NAME_MODIFIED_DATE, now);
 				
-				db.insert(GrammarProviderContract.Grammars.TABLE_NAME, null, values);
+				grammarId = db.insert(GrammarProviderContract.Grammars.TABLE_NAME, null, values);
 			} else {
-				Log.d(TAG, "update data index = " + grammarId);
+				Log.d(TAG, "update grammar index = " + grammarId);
 				String whereClause = GrammarProviderContract.Grammars._ID + " = ?";
 				String[] whereArgs = { String.valueOf(grammarId) };
 				values.put(GrammarProviderContract.Grammars.COLUMN_NAME_MODIFIED_DATE, now);
