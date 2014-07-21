@@ -39,7 +39,6 @@ public class EditGrammarActivity extends ActionBarActivity {
 				checkGrammar();
 			}
 		});
-		recalculateIndex();
 	}
 
 	@Override
@@ -80,8 +79,6 @@ public class EditGrammarActivity extends ActionBarActivity {
 			EditText edit = (EditText)item.findViewById(R.id.edit_meaning);
 			edit.setText(meaning);
 		}
-		Button btn = (Button)item.findViewById(R.id.btn_remove);
-		btn.setTag(mAddedItemList.getChildCount());
 		mAddedItemList.addView(item);
 		recalculateIndex();
 	}
@@ -243,7 +240,7 @@ public class EditGrammarActivity extends ActionBarActivity {
 
 				String[] selectionArgs = new String[] { meaning, String.valueOf(type) };
 				
-				Cursor c = db.query(GrammarProviderContract.Meanings.TABLE_NAME, 
+				Cursor cursor = db.query(GrammarProviderContract.Meanings.TABLE_NAME, 
 						null,
 						selection,
 						selectionArgs,
@@ -252,14 +249,14 @@ public class EditGrammarActivity extends ActionBarActivity {
 						GrammarProviderContract.Meanings.DEFAULT_SORT_ORDER);
 
 				long meaningId = -1;
-				if (c != null && c.getCount() > 0) {
-					if (c.moveToFirst()) {
-						int index = c.getColumnIndex(GrammarProviderContract.Meanings._ID);
-						meaningId = c.getLong(index);
+				if (cursor != null) {
+					if (cursor.getCount() > 0 && cursor.moveToFirst()) {
+						int index = cursor.getColumnIndex(GrammarProviderContract.Meanings._ID);
+						meaningId = cursor.getLong(index);
 					}
+					
+					cursor.close();
 				}
-
-				if (c != null) c.close();
 
 				if (meaningId < 0) {
 					Log.d(TAG, "insert meaning");
@@ -297,13 +294,12 @@ public class EditGrammarActivity extends ActionBarActivity {
 			Log.d(TAG, "############# saveGrammar Grammar = " + strGrammar + " meaning = " + strMeaning);
 			
 			ContentValues values = new ContentValues();
-			values.put(GrammarProviderContract.Grammars.COLUMN_NAME_GRAMMAR, strGrammar);
 			values.put(GrammarProviderContract.Grammars.COLUMN_NAME_MEANING, strMeaning);
+			values.put(GrammarProviderContract.Grammars.COLUMN_NAME_MODIFIED_DATE, now);
 			
 			Log.d(TAG, "update grammar index = " + grammarId);
 			whereClause = GrammarProviderContract.Grammars._ID + " = ?";
 			whereArgs = new String[] { String.valueOf(grammarId) };
-			values.put(GrammarProviderContract.Grammars.COLUMN_NAME_MODIFIED_DATE, now);
 				
 			db.update(GrammarProviderContract.Grammars.TABLE_NAME, values, whereClause, whereArgs);			
 		} else {
