@@ -128,6 +128,11 @@ public final class GrammarProviderContract {
 		public static final String COLUMN_NAME_GRAMMAR_ID = "grammar_id";
 		
 		public static final String COLUMN_NAME_MEANING_ID = "meaing_id";
+		
+		/**
+		 * The default sort order for this table
+		 */
+		public static final String DEFAULT_SORT_ORDER = COLUMN_NAME_GRAMMAR_ID + " ASC"; //ASC or DESC
 	}
 	
 	public static final class Grammars implements BaseColumns {

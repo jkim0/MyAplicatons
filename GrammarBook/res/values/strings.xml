@@ -21,5 +21,6 @@
     <string name="btn_label_remove">Remove</string>
     <string name="action_done">Done</string>
     <string name="btn_label_minus">-</string>
+    <string name="btn_label_check">Check</string>
 
 </resources>

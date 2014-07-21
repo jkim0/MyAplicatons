@@ -26,6 +26,13 @@
             android:hint="@string/hint_label_grammar" >
 
     	 </EditText>
+
+        <Button
+            android:id="@+id/btn_check"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/btn_label_check" />
+
     </LinearLayout>
 
     <ScrollView
@@ -61,11 +68,6 @@
                 android:orientation="vertical"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content">
-                
-                <include
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    layout="@layout/added_item_layout"/>
                 
             </LinearLayout>
             
