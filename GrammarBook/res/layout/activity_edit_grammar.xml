@@ -9,7 +9,7 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context="com.loyid.grammarbook.EditGrammarActivity" >
 
-    <LinearLayout
+    <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
@@ -17,23 +17,32 @@
             android:id="@+id/label_grammar"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
             android:text="@string/label_grammar" />
+        
+        <Button
+            android:id="@+id/btn_check"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:text="@string/btn_label_check" />
+        
+        <Button
+            android:id="@+id/btn_play"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_toLeftOf="@id/btn_check"
+            android:text="@string/btn_label_play" />
         
         <EditText
             android:id="@+id/edit_grammar"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:hint="@string/hint_label_grammar" >
-
-    	 </EditText>
-
-        <Button
-            android:id="@+id/btn_check"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/btn_label_check" />
-
-    </LinearLayout>
+            android:layout_toRightOf="@id/label_grammar"
+            android:layout_toLeftOf="@id/btn_play"
+            android:hint="@string/hint_label_grammar" />
+            	 
+    </RelativeLayout>
 
     <ScrollView
         android:id="@+id/scrollView1"

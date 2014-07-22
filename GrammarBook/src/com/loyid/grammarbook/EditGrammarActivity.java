@@ -1,5 +1,9 @@
 package com.loyid.grammarbook;
 
+import java.util.Locale;
+
+import android.speech.tts.TextToSpeech;
+import android.speech.tts.TextToSpeech.OnInitListener;
 import android.support.v7.app.ActionBarActivity;
 import android.content.ContentValues;
 import android.database.Cursor;
@@ -15,33 +19,47 @@ import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.Spinner;
-import android.widget.TextView;
+import android.widget.Toast;
 
-public class EditGrammarActivity extends ActionBarActivity {
+public class EditGrammarActivity extends ActionBarActivity implements OnInitListener {
 	private static final String TAG = "EditGrammarActivity";
 	private LinearLayout mAddedItemList = null;
 
 	private DatabaseHelper mDatabaseHelper = null;
 	
 	private Button mBtnCheck = null;
-	private TextView mTypeLabel = null;
+	private Button mBtnPlay = null;
 	
 	private long mGrammarId = -1;
+	
+	private TextToSpeech mTTS;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		
+		mTTS = new TextToSpeech(this, this);
 		mDatabaseHelper = new DatabaseHelper(this);
 		setContentView(R.layout.activity_edit_grammar);
 		mAddedItemList = (LinearLayout)findViewById(R.id.added_item_list);
-		mTypeLabel = (TextView)findViewById(R.id.label_type);
 		mBtnCheck = (Button)findViewById(R.id.btn_check);
 		mBtnCheck.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View view) {
 				checkGrammar();
 			}
+		});
+		mBtnPlay = (Button)findViewById(R.id.btn_play);
+		mBtnPlay.setOnClickListener(new OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				// TODO Auto-generated method stub
+				EditText grammar = (EditText)findViewById(R.id.edit_grammar);
+				String strGrammar = grammar.getText().toString().trim();
+				if (strGrammar != null && strGrammar.length() > 0) {
+					mTTS.setLanguage(Locale.US);
+					mTTS.speak(strGrammar, TextToSpeech.QUEUE_FLUSH, null);
+				}
+			}			
 		});
 	}
 
@@ -313,5 +331,13 @@ public class EditGrammarActivity extends ActionBarActivity {
 		}
 		
 		finish();
+	}
+
+	@Override
+	public void onInit(int status) {
+		// TODO Auto-generated method stub
+		boolean isInit = status == TextToSpeech.SUCCESS;
+		int msg = isInit ? R.string.msg_init_tts_success : R.string.msg_init_tts_fail;
+		Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
 	}
 }

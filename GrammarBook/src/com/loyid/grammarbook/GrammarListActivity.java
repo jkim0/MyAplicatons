@@ -1,5 +1,9 @@
 package com.loyid.grammarbook;
 
+import java.util.Locale;
+
+import android.speech.tts.TextToSpeech;
+import android.speech.tts.TextToSpeech.OnInitListener;
 import android.support.v7.app.ActionBarActivity;
 import android.content.Context;
 import android.database.Cursor;
@@ -9,12 +13,15 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.ExpandableListView;
 import android.widget.SimpleCursorTreeAdapter;
 import android.widget.TextView;
+import android.widget.Toast;
 
-public class GrammarListActivity extends ActionBarActivity {
+public class GrammarListActivity extends ActionBarActivity implements OnInitListener {
 	private static final String TAG = "GrammarListActivity";
 	
 	private ExGrammarListAdapter mListAdapter = null;
@@ -24,10 +31,14 @@ public class GrammarListActivity extends ActionBarActivity {
 	private DatabaseHelper mDatabaseHelper = null;
 	private GrammarViewBinder mViewBinder = null;
 	
+	private TextToSpeech mTTS;
+	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_grammar_list);
+		
+		mTTS = new TextToSpeech(this, this);
 		
 		mDatabaseHelper = new DatabaseHelper(this);
 		
@@ -166,6 +177,18 @@ public class GrammarListActivity extends ActionBarActivity {
 			} else {
 				text.setVisibility(ViewGroup.VISIBLE);
 			}
+			
+			int columnIndex = cursor.getColumnIndex(GrammarProviderContract.Grammars.COLUMN_NAME_GRAMMAR);
+			final String grammar = cursor.getString(columnIndex);
+			Button ttsBtn = (Button)view.findViewById(R.id.btn_play);
+			ttsBtn.setOnClickListener(new OnClickListener() {
+				@Override
+				public void onClick(View v) {
+					// TODO Auto-generated method stub
+					mTTS.setLanguage(Locale.US);
+					mTTS.speak(grammar, TextToSpeech.QUEUE_FLUSH, null);
+				}
+			});
 	    }
 		
 	}
@@ -193,5 +216,13 @@ public class GrammarListActivity extends ActionBarActivity {
 		} else {
 			Log.e(TAG, "loadGrammarList cursor is null");
 		}
+	}
+
+	@Override
+	public void onInit(int status) {
+		// TODO Auto-generated method stub
+		boolean isInit = status == TextToSpeech.SUCCESS;
+		int msg = isInit ? R.string.msg_init_tts_success : R.string.msg_init_tts_fail;
+		Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
 	}
 }

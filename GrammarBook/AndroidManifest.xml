@@ -24,19 +24,35 @@
         </activity>
         <activity
             android:name=".EditGrammarActivity"
-            android:label="@string/title_activity_edit_grammar" >
+            android:label="@string/title_activity_edit_grammar"
+            android:parentActivityName="com.loyid.grammarbook.MainActivity">
+            <meta-data
+	            android:name="android.support.PARENT_ACTIVITY"
+	            android:value="com.example.myfirstapp.MainActivity" />
         </activity>
         <activity
             android:name=".GrammarListActivity"
-            android:label="@string/title_activity_grammar_list" >
+            android:label="@string/title_activity_grammar_list"
+            android:parentActivityName="com.loyid.grammarbook.MainActivity">
+            <meta-data
+	            android:name="android.support.PARENT_ACTIVITY"
+	            android:value="com.example.myfirstapp.MainActivity" />
         </activity>
         <activity
             android:name=".GrammarTestActivity"
-            android:label="@string/title_activity_grammar_test" >
+            android:label="@string/title_activity_grammar_test"
+            android:parentActivityName="com.loyid.grammarbook.MainActivity">
+            <meta-data
+	            android:name="android.support.PARENT_ACTIVITY"
+	            android:value="com.example.myfirstapp.MainActivity" />
         </activity>
         <activity
             android:name=".SettingActivity"
-            android:label="@string/title_activity_setting" >
+            android:label="@string/title_activity_setting"
+            android:parentActivityName="com.loyid.grammarbook.MainActivity">
+            <meta-data
+	            android:name="android.support.PARENT_ACTIVITY"
+	            android:value="com.example.myfirstapp.MainActivity" />
         </activity>
         
     </application>

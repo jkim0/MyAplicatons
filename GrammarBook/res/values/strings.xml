@@ -23,5 +23,7 @@
     <string name="btn_label_minus">-</string>
     <string name="btn_label_check">Check</string>
     <string name="btn_label_play">Play</string>
+    <string name="msg_init_tts_success">TTS initializing sucessed</string>
+    <string name="msg_init_tts_fail">TTS initializing failed</string>
 
 </resources>
