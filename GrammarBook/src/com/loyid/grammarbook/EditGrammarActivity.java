@@ -84,6 +84,8 @@ public class EditGrammarActivity extends ActionBarActivity {
 	}
 	
 	private void checkGrammar() {
+		mBtnCheck.setEnabled(false);
+		
 		EditText grammar = (EditText)findViewById(R.id.edit_grammar);
 		String strGrammar = grammar.getText().toString().trim();
 		
@@ -207,7 +209,6 @@ public class EditGrammarActivity extends ActionBarActivity {
 		StringBuilder sb = null;
 		int count = mAddedItemList.getChildCount();
 		
-		Log.e(TAG, "################# saveGrammar grammarId = " + grammarId);
 		if (grammarId < 0 && count > 0) {
 			ContentValues values = new ContentValues();
 			values.put(GrammarProviderContract.Grammars.COLUMN_NAME_GRAMMAR, strGrammar);
@@ -283,7 +284,7 @@ public class EditGrammarActivity extends ActionBarActivity {
 				sb.append("%" + meaning);
 				
 				if (i != count - 1) {
-					sb.append("$");
+					sb.append("#");
 				}
 			}
 		

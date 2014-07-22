@@ -8,9 +8,13 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context="com.loyid.grammarbook.GrammarListActivity" >
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/hello_world" />
+    <ExpandableListView
+        android:id="@+id/ex_grammar_list"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:indicatorRight="10dp"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentTop="true" >
+    </ExpandableListView>
 
 </RelativeLayout>

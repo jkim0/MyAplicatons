@@ -72,6 +72,8 @@ public final class GrammarProviderContract {
 		 */	
 		public static final String COLUMN_NAME_MODIFIED_DATE = "modified";
 		
+		public static final String COLUMN_NAME_REFER_COUNT = "refer_count";
+		
 		/**
 		 * The default sort order for this table
 		 */

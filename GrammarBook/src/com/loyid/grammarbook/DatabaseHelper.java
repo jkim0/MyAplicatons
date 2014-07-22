@@ -39,7 +39,8 @@ public class DatabaseHelper extends SQLiteOpenHelper
 				+ GrammarProviderContract.Meanings.COLUMN_NAME_WORD + " TEXT,"
 				+ GrammarProviderContract.Meanings.COLUMN_NAME_TYPE + " TEXT,"
 				+ GrammarProviderContract.Meanings.COLUMN_NAME_CREATED_DATE + " INTEGER,"
-				+ GrammarProviderContract.Meanings.COLUMN_NAME_MODIFIED_DATE + " INTEGER"
+				+ GrammarProviderContract.Meanings.COLUMN_NAME_MODIFIED_DATE + " INTEGER,"
+				+ GrammarProviderContract.Meanings.COLUMN_NAME_REFER_COUNT + " INTEGER DEFAULT 0 NOT NULL"
 				+ ");");
 		
 		db.execSQL("CREATE TABLE " + GrammarProviderContract.Mappings.TABLE_NAME + " ("
@@ -47,6 +48,23 @@ public class DatabaseHelper extends SQLiteOpenHelper
 				+ GrammarProviderContract.Mappings.COLUMN_NAME_GRAMMAR_ID + " INTEGER,"
 				+ GrammarProviderContract.Mappings.COLUMN_NAME_MEANING_ID + " INTEGER"
 				+ ");");
+		
+		db.execSQL("CREATE TRIGGER IF NOT EXISTS decrease_meaning_refer_mount AFTER DELETE on "
+				+ GrammarProviderContract.Mappings.TABLE_NAME + " "
+				+ "BEGIN "
+					+ "UPDATE " + GrammarProviderContract.Meanings.TABLE_NAME + " "
+					+ "SET refer_count = refer_count - 1 "
+					+ "WHERE _id = old." + GrammarProviderContract.Mappings.COLUMN_NAME_MEANING_ID + ";"
+					+ "DELETE from " + GrammarProviderContract.Meanings.TABLE_NAME + " WHERE refer_count <= 0;"
+				+ "END");
+		
+		db.execSQL("CREATE TRIGGER IF NOT EXISTS increase_meaning_refer_mount AFTER INSERT on "
+				+ GrammarProviderContract.Mappings.TABLE_NAME + " "
+				+ "BEGIN "
+					+ "UPDATE " + GrammarProviderContract.Meanings.TABLE_NAME + " "
+					+ "SET refer_count = refer_count + 1 "
+					+ "WHERE _id = new." + GrammarProviderContract.Mappings.COLUMN_NAME_MEANING_ID + ";"
+				+ "END");
 	}
 
 	@Override
