@@ -13,7 +13,9 @@ import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 import android.widget.Spinner;
+import android.widget.TextView;
 
 public class EditGrammarActivity extends ActionBarActivity {
 	private static final String TAG = "EditGrammarActivity";
@@ -22,6 +24,7 @@ public class EditGrammarActivity extends ActionBarActivity {
 	private DatabaseHelper mDatabaseHelper = null;
 	
 	private Button mBtnCheck = null;
+	private TextView mTypeLabel = null;
 	
 	private long mGrammarId = -1;
 	
@@ -32,6 +35,7 @@ public class EditGrammarActivity extends ActionBarActivity {
 		mDatabaseHelper = new DatabaseHelper(this);
 		setContentView(R.layout.activity_edit_grammar);
 		mAddedItemList = (LinearLayout)findViewById(R.id.added_item_list);
+		mTypeLabel = (TextView)findViewById(R.id.label_type);
 		mBtnCheck = (Button)findViewById(R.id.btn_check);
 		mBtnCheck.setOnClickListener(new OnClickListener() {
 			@Override
@@ -70,16 +74,16 @@ public class EditGrammarActivity extends ActionBarActivity {
 	}
 	
 	private void addMeaningRow(int type, String meaning) {
-		LinearLayout item = (LinearLayout)getLayoutInflater().inflate(R.layout.added_item_layout, mAddedItemList, false);
+		RelativeLayout item = (RelativeLayout)getLayoutInflater().inflate(R.layout.added_item_layout, mAddedItemList, false);
+		Spinner spinner = (Spinner)item.findViewById(R.id.spinner_type);
 		if (type > 0) {
-			Spinner spinner = (Spinner)item.findViewById(R.id.spinner_type);
 			spinner.setSelection(type);
 		}
 		if (meaning != null) {
 			EditText edit = (EditText)item.findViewById(R.id.edit_meaning);
 			edit.setText(meaning);
 		}
-		mAddedItemList.addView(item);
+		mAddedItemList.addView(item);	
 		recalculateIndex();
 	}
 	
@@ -178,7 +182,8 @@ public class EditGrammarActivity extends ActionBarActivity {
 	
 	public void recalculateIndex() {
 		for (int i = 0; i < mAddedItemList.getChildCount(); i++) {
-			LinearLayout itemLayout = (LinearLayout)mAddedItemList.getChildAt(i);
+			RelativeLayout itemLayout = (RelativeLayout)mAddedItemList.getChildAt(i);
+			Log.d(TAG, "################## item = " + itemLayout.findViewById(R.id.btn_remove));
 			Button btn = (Button)itemLayout.findViewById(R.id.btn_remove);
 			btn.setOnClickListener(new OnClickListener() {
 				public void onClick(View view) {
@@ -224,7 +229,7 @@ public class EditGrammarActivity extends ActionBarActivity {
 		Log.d(TAG, "remove " + result + " items from Mappings table");
 		
 		for (int i = 0; i < count; i++) {
-			LinearLayout itemLayout = (LinearLayout)mAddedItemList.getChildAt(i);
+			RelativeLayout itemLayout = (RelativeLayout)mAddedItemList.getChildAt(i);
 			Spinner spinner = (Spinner)itemLayout.findViewById(R.id.spinner_type);
 			EditText edit = (EditText)itemLayout.findViewById(R.id.edit_meaning);
 			int type = spinner.getSelectedItemPosition();

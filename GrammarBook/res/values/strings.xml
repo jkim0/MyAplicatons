@@ -22,5 +22,6 @@
     <string name="action_done">Done</string>
     <string name="btn_label_minus">-</string>
     <string name="btn_label_check">Check</string>
+    <string name="btn_label_play">Play</string>
 
 </resources>

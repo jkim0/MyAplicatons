@@ -34,7 +34,7 @@ public class GrammarListActivity extends ActionBarActivity {
 		mViewBinder = new GrammarViewBinder(this);
 		
 		mListView = (ExpandableListView)findViewById(R.id.ex_grammar_list);
-		mListAdapter = new ExGrammarListAdapter(this, null, R.layout.grammar_collapsed_group_layout,
+		mListAdapter = new ExGrammarListAdapter(this, null, R.layout.grammar_group_layout,
 				new String[] {GrammarProviderContract.Grammars.COLUMN_NAME_GRAMMAR,
 					GrammarProviderContract.Grammars.COLUMN_NAME_MEANING},
 				new int[] {R.id.grammar, R.id.meaning},
