@@ -46,7 +46,7 @@ public class MainActivity extends ActionBarActivity {
 			startActivity(new Intent(this, GrammarTestActivity.class));
 			break;
 		case R.id.btn_main_setting:
-			startActivity(new Intent(this, SettingActivity.class));
+			startActivity(new Intent(this, SettingsActivity.class));
 			break;
 		}
 	}
