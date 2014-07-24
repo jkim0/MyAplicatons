@@ -316,7 +316,7 @@ public class SettingsActivity extends PreferenceActivity {
 		if (resultCode == RESULT_OK) {
 			if (requestCode == REQUEST_FILE_SELECT_CODE) {
 				Uri uri = data.getData();
-				loadDataFromFile(uri);
+				mHandler.sendMessage(mHandler.obtainMessage(MSG_LOAD_DATA_FROM_FILE, uri));
 			}
 		}
 		super.onActivityResult(requestCode, resultCode, data);
