@@ -35,5 +35,6 @@
     <string name="pref_header_label_test">Test preference</string>
     <string name="title_activity_grammar_preference">GrammarPreferenceActivity</string>
     <string name="msg_meaning_row_full">Can not add meaning row any more.</string>
+    <string name="msg_load_data_done">Data load from File finished.</string>
 
 </resources>

@@ -8,6 +8,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.media.Ringtone;
 import android.media.RingtoneManager;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
@@ -23,6 +24,7 @@ import android.preference.PreferenceManager;
 import android.preference.RingtonePreference;
 import android.text.TextUtils;
 import android.util.Log;
+import android.widget.Toast;
 
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
@@ -330,13 +332,8 @@ public class SettingsActivity extends PreferenceActivity {
 	
 	public void loadDataFromFile(final Uri fileUri) {
 		Log.d(TAG, "loadDataFromFile uri = " + fileUri);
-		Runnable callback = new Runnable() {
-			@Override
-			public void run() {
-				Log.e(TAG, "finish load data from uri = " + fileUri);
-			}
-		};
-		GrammarUtils.loadDataFromFile(this, fileUri, callback);
+		LoadDataAyncTask task = new LoadDataAyncTask();
+		task.execute(fileUri);
 	}
 	
 	public void resetData() {
@@ -352,6 +349,27 @@ public class SettingsActivity extends PreferenceActivity {
 				break;
 			}
 			super.handleMessage(msg);
+		}
+	}
+	
+	private class LoadDataAyncTask extends AsyncTask<Uri, Void, Boolean> {
+		@Override
+		protected void onPreExecute() {
+			// TODO Auto-generated method stub
+			super.onPreExecute();
+		}
+
+		@Override
+		protected Boolean doInBackground(Uri... params) {
+			boolean result = GrammarUtils.loadDataFromFile(SettingsActivity.this, params[0], null);
+			return result;
+		}
+
+		@Override
+		protected void onPostExecute(Boolean result) {
+			// TODO Auto-generated method stub
+			Toast.makeText(SettingsActivity.this, R.string.msg_load_data_done, Toast.LENGTH_SHORT).show();
+			super.onPostExecute(result);
 		}
 	}
 }
