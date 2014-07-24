@@ -11,7 +11,7 @@
     <string name="title_activity_edit_grammar">EditGrammarActivity</string>
     <string name="title_activity_grammar_list">GrammarListActivity</string>
     <string name="title_activity_grammar_test">GrammarTestActivity</string>
-    <string name="title_activity_setting">SettingActivity</string>
+    <string name="title_activity_settings">SettingActivity</string>
     <string name="label_grammar">Grammar</string>
     <string name="label_meaning">Meaning</string>
     <string name="lebel_type">Type</string>
@@ -25,5 +25,15 @@
     <string name="btn_label_play">Play</string>
     <string name="msg_init_tts_success">TTS initializing sucessed</string>
     <string name="msg_init_tts_fail">TTS initializing failed</string>
+    <string name="pref_label_load_data">Load grammars from file(*.txt)</string>
+    <string name="pref_label_reset">Reset grammar data</string>
+    <string name="pref_header_label_general">General</string>
+    <string name="pref_label_max_meaning_count">Max line count</string>
+    <string name="pref_header_label_grammar_edit">Grammar edit preference</string>
+    <string name="pref_label_test_count">Test count</string>
+    <string name="pref_label_test_example_count">Example count of Objective test</string>
+    <string name="pref_header_label_test">Test preference</string>
+    <string name="title_activity_grammar_preference">GrammarPreferenceActivity</string>
+    <string name="msg_meaning_row_full">Can not add meaning row any more.</string>
 
 </resources>

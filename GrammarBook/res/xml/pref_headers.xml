@@ -4,12 +4,12 @@
 
     <header
         android:fragment="com.loyid.grammarbook.SettingsActivity$GeneralPreferenceFragment"
-        android:title="@string/pref_header_general" />
+        android:title="@string/pref_header_label_general" />
     <header
-        android:fragment="com.loyid.grammarbook.SettingsActivity$NotificationPreferenceFragment"
-        android:title="@string/pref_header_notifications" />
+        android:fragment="com.loyid.grammarbook.SettingsActivity$GrammarEditPreferenceFragment"
+        android:title="@string/pref_header_label_grammar_edit" />
     <header
-        android:fragment="com.loyid.grammarbook.SettingsActivity$DataSyncPreferenceFragment"
-        android:title="@string/pref_header_data_sync" />
+        android:fragment="com.loyid.grammarbook.SettingsActivity$TestPreferenceFragment"
+        android:title="@string/pref_header_label_test" />
 
 </preference-headers>

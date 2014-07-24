@@ -2,21 +2,33 @@ package com.loyid.grammarbook;
 
 import android.annotation.TargetApi;
 import android.content.Context;
+import android.content.Intent;
 import android.content.res.Configuration;
+import android.database.sqlite.SQLiteDatabase;
 import android.media.Ringtone;
 import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
+import android.os.Handler;
+import android.os.Message;
 import android.preference.ListPreference;
 import android.preference.Preference;
+import android.preference.Preference.OnPreferenceClickListener;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceCategory;
 import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
 import android.preference.RingtonePreference;
 import android.text.TextUtils;
+import android.util.Log;
 
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.List;
 
 /**
@@ -31,6 +43,7 @@ import java.util.List;
  * API Guide</a> for more information on developing a Settings UI.
  */
 public class SettingsActivity extends PreferenceActivity {
+	private static final String TAG = "SettingsActivity";
 	/**
 	 * Determines whether to always show the simplified settings UI, where
 	 * settings are presented in a single list. When false, settings are shown
@@ -38,6 +51,32 @@ public class SettingsActivity extends PreferenceActivity {
 	 * shown on tablets.
 	 */
 	private static final boolean ALWAYS_SIMPLE_PREFS = false;
+	
+	private static final int REQUEST_FILE_SELECT_CODE = 0;
+	
+	private static final int MSG_LOAD_DATA_FROM_FILE = 0;
+	
+	private DatabaseHelper mDatabaseHelper = null;
+	
+	private MessageHandler mHandler = null;
+
+	@TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
+	@Override
+	public Intent onBuildStartFragmentIntent(String fragmentName, Bundle args,
+			int titleRes, int shortTitleRes) {
+		// TODO Auto-generated method stub
+		Intent intent = super.onBuildStartFragmentIntent(fragmentName, args, titleRes,
+				shortTitleRes);
+		intent.setClass(this, GrammarPreferenceActivity.class);
+		return intent;
+	}
+
+	@Override
+	protected void onCreate(Bundle savedInstanceState) {
+		// TODO Auto-generated method stub
+		super.onCreate(savedInstanceState);
+		mHandler = new MessageHandler();
+	}
 
 	@Override
 	protected void onPostCreate(Bundle savedInstanceState) {
@@ -59,28 +98,44 @@ public class SettingsActivity extends PreferenceActivity {
 		// In the simplified UI, fragments are not used at all and we instead
 		// use the older PreferenceActivity APIs.
 
-		// Add 'general' preferences.
+		// Add 'General' preferences.
 		addPreferencesFromResource(R.xml.pref_general);
 
-		// Add 'notifications' preferences, and a corresponding header.
+		// Add 'Grammar edit' preferences, and a corresponding header.
 		PreferenceCategory fakeHeader = new PreferenceCategory(this);
-		fakeHeader.setTitle(R.string.pref_header_notifications);
+		fakeHeader.setTitle(R.string.pref_header_label_grammar_edit);
 		getPreferenceScreen().addPreference(fakeHeader);
-		addPreferencesFromResource(R.xml.pref_notification);
+		addPreferencesFromResource(R.xml.pref_grammar_edit);
 
-		// Add 'data and sync' preferences, and a corresponding header.
+		// Add 'Test' preferences, and a corresponding header.
 		fakeHeader = new PreferenceCategory(this);
-		fakeHeader.setTitle(R.string.pref_header_data_sync);
+		fakeHeader.setTitle(R.string.pref_header_label_test);
 		getPreferenceScreen().addPreference(fakeHeader);
-		addPreferencesFromResource(R.xml.pref_data_sync);
-
-		// Bind the summaries of EditText/List/Dialog/Ringtone preferences to
-		// their values. When their values change, their summaries are updated
-		// to reflect the new value, per the Android Design guidelines.
-		bindPreferenceSummaryToValue(findPreference("example_text"));
-		bindPreferenceSummaryToValue(findPreference("example_list"));
-		bindPreferenceSummaryToValue(findPreference("notifications_new_message_ringtone"));
-		bindPreferenceSummaryToValue(findPreference("sync_frequency"));
+		addPreferencesFromResource(R.xml.pref_test);
+		
+		Preference loadData = findPreference("load_data");
+		Preference reset = findPreference("reset");
+		
+		loadData.setOnPreferenceClickListener(new OnPreferenceClickListener() {
+			@Override
+			public boolean onPreferenceClick(Preference preference) {
+				reloadDataFromFile();
+				return true;
+			}
+		});
+		
+		reset.setOnPreferenceClickListener(new OnPreferenceClickListener() {
+			@Override
+			public boolean onPreferenceClick(Preference preference) {
+				// TODO Auto-generated method stub
+				resetData();
+				return true;
+			}
+		});
+		
+		bindPreferenceSummaryToValue(findPreference("max_meaning_count"));
+		bindPreferenceSummaryToValue(findPreference("test_count"));
+		bindPreferenceSummaryToValue(findPreference("test_example_count"));
 	}
 
 	/** {@inheritDoc} */
@@ -139,29 +194,6 @@ public class SettingsActivity extends PreferenceActivity {
 						.setSummary(index >= 0 ? listPreference.getEntries()[index]
 								: null);
 
-			} else if (preference instanceof RingtonePreference) {
-				// For ringtone preferences, look up the correct display value
-				// using RingtoneManager.
-				if (TextUtils.isEmpty(stringValue)) {
-					// Empty values correspond to 'silent' (no ringtone).
-					preference.setSummary(R.string.pref_ringtone_silent);
-
-				} else {
-					Ringtone ringtone = RingtoneManager.getRingtone(
-							preference.getContext(), Uri.parse(stringValue));
-
-					if (ringtone == null) {
-						// Clear the summary if there was a lookup error.
-						preference.setSummary(null);
-					} else {
-						// Set the summary to reflect the new ringtone display
-						// name.
-						String name = ringtone
-								.getTitle(preference.getContext());
-						preference.setSummary(name);
-					}
-				}
-
 			} else {
 				// For all other preferences, set the summary to the value's
 				// simple string representation.
@@ -204,52 +236,122 @@ public class SettingsActivity extends PreferenceActivity {
 		public void onCreate(Bundle savedInstanceState) {
 			super.onCreate(savedInstanceState);
 			addPreferencesFromResource(R.xml.pref_general);
-
-			// Bind the summaries of EditText/List/Dialog/Ringtone preferences
-			// to their values. When their values change, their summaries are
-			// updated to reflect the new value, per the Android Design
-			// guidelines.
-			bindPreferenceSummaryToValue(findPreference("example_text"));
-			bindPreferenceSummaryToValue(findPreference("example_list"));
+			
+			Preference loadData = findPreference("load_data");
+			Preference reset = findPreference("reset");
+			
+			loadData.setOnPreferenceClickListener(new OnPreferenceClickListener() {
+				@Override
+				public boolean onPreferenceClick(Preference preference) {
+					// TODO Auto-generated method stub
+					return false;
+				}
+			});
+			
+			reset.setOnPreferenceClickListener(new OnPreferenceClickListener() {
+				@Override
+				public boolean onPreferenceClick(Preference preference) {
+					// TODO Auto-generated method stub
+					return false;
+				}
+			});
 		}
 	}
 
 	/**
-	 * This fragment shows notification preferences only. It is used when the
+	 * This fragment shows grammar edit preferences only. It is used when the
 	 * activity is showing a two-pane settings UI.
 	 */
 	@TargetApi(Build.VERSION_CODES.HONEYCOMB)
-	public static class NotificationPreferenceFragment extends
+	public static class GrammarEditPreferenceFragment extends
 			PreferenceFragment {
 		@Override
 		public void onCreate(Bundle savedInstanceState) {
 			super.onCreate(savedInstanceState);
-			addPreferencesFromResource(R.xml.pref_notification);
-
-			// Bind the summaries of EditText/List/Dialog/Ringtone preferences
-			// to their values. When their values change, their summaries are
-			// updated to reflect the new value, per the Android Design
-			// guidelines.
-			bindPreferenceSummaryToValue(findPreference("notifications_new_message_ringtone"));
+			addPreferencesFromResource(R.xml.pref_grammar_edit);
+			
+			bindPreferenceSummaryToValue(findPreference("max_meaning_count"));
 		}
 	}
 
 	/**
-	 * This fragment shows data and sync preferences only. It is used when the
+	 * This fragment shows test preferences only. It is used when the
 	 * activity is showing a two-pane settings UI.
 	 */
 	@TargetApi(Build.VERSION_CODES.HONEYCOMB)
-	public static class DataSyncPreferenceFragment extends PreferenceFragment {
+	public static class TestPreferenceFragment extends PreferenceFragment {
 		@Override
 		public void onCreate(Bundle savedInstanceState) {
 			super.onCreate(savedInstanceState);
-			addPreferencesFromResource(R.xml.pref_data_sync);
+			addPreferencesFromResource(R.xml.pref_test);
+			
+			bindPreferenceSummaryToValue(findPreference("test_count"));
+			bindPreferenceSummaryToValue(findPreference("test_example_count"));
+		}
+	}
+	
+	@TargetApi(Build.VERSION_CODES.KITKAT)
+	@Override
+	protected boolean isValidFragment(String fragmentName) {
+		Log.e(TAG, "isValidFragment fragmentName = " + fragmentName);
+		if ( GeneralPreferenceFragment.class.getName().equals(fragmentName) 
+				|| GrammarEditPreferenceFragment.class.getName().equals(fragmentName)
+				|| TestPreferenceFragment.class.getName().equals(fragmentName))
+			return true;
+		return super.isValidFragment(fragmentName);
+	}
+	
+	public void reloadDataFromFile() {
+		loadDataFromFile();
+		
+		Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+		intent.addCategory(Intent.CATEGORY_OPENABLE);
+		intent.setType("*/*");
+		
+		//this.startActivityForResult(intent, REQUEST_FILE_SELECT_CODE);
+	}
+	
+	@Override
+	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+		if (resultCode == RESULT_OK) {
+			if (requestCode == REQUEST_FILE_SELECT_CODE) {
+				Uri uri = data.getData();
+				loadDataFromFile(uri);
+			}
+		}
+		super.onActivityResult(requestCode, resultCode, data);
+	}
 
-			// Bind the summaries of EditText/List/Dialog/Ringtone preferences
-			// to their values. When their values change, their summaries are
-			// updated to reflect the new value, per the Android Design
-			// guidelines.
-			bindPreferenceSummaryToValue(findPreference("sync_frequency"));
+	public void loadDataFromFile(){
+		String fileName= "file:///sdcard/Download/Grammars.txt";
+		Uri fileUri = Uri.parse( fileName );
+		mHandler.sendMessage(mHandler.obtainMessage(MSG_LOAD_DATA_FROM_FILE, fileUri));
+	}
+	
+	public void loadDataFromFile(final Uri fileUri) {
+		Log.d(TAG, "loadDataFromFile uri = " + fileUri);
+		Runnable callback = new Runnable() {
+			@Override
+			public void run() {
+				Log.e(TAG, "finish load data from uri = " + fileUri);
+			}
+		};
+		GrammarUtils.loadDataFromFile(this, fileUri, callback);
+	}
+	
+	public void resetData() {
+	}
+	
+	private class MessageHandler extends Handler {
+		@Override
+		public void handleMessage(Message msg) {
+			switch(msg.what) {
+			case MSG_LOAD_DATA_FROM_FILE:
+				Uri fileUri = (Uri)msg.obj;
+				loadDataFromFile(fileUri);
+				break;
+			}
+			super.handleMessage(msg);
 		}
 	}
 }

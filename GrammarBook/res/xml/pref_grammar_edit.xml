@@ -1,0 +1,12 @@
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" >
+    
+    <ListPreference
+        android:key="max_meaning_count"
+        android:positiveButtonText="@null"
+        android:negativeButtonText="@null"
+        android:entries="@array/pref_max_meaning_count_titles"
+        android:entryValues="@array/pref_max_meaning_count_values"
+        android:defaultValue="10"
+        android:title="@string/pref_label_max_meaning_count"/>
+
+</PreferenceScreen>

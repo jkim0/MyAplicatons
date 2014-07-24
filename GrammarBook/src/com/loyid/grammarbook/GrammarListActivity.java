@@ -225,4 +225,12 @@ public class GrammarListActivity extends ActionBarActivity implements OnInitList
 		int msg = isInit ? R.string.msg_init_tts_success : R.string.msg_init_tts_fail;
 		Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
 	}
+	
+	@Override
+	protected void onDestroy() {
+		if (mTTS != null) {
+			mTTS.shutdown();
+		}
+		super.onDestroy();
+	}
 }

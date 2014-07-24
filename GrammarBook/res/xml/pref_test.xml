@@ -1,0 +1,4 @@
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" >
+    <ListPreference android:title="@string/pref_label_test_count" android:negativeButtonText="@null" android:key="test_count" android:entryValues="@array/pref_test_count_values" android:entries="@array/pref_test_count_titles" android:defaultValue="20" android:positiveButtonText="@null"/>
+    <ListPreference android:title="@string/pref_label_test_example_count" android:negativeButtonText="@null" android:key="test_example_count" android:entryValues="@array/pref_test_example_count_values" android:entries="@array/pref_test_example_count_titles" android:defaultValue="4" android:positiveButtonText="@null"/>
+</PreferenceScreen>
