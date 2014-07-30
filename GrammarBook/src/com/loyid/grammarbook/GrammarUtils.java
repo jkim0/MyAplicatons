@@ -10,13 +10,12 @@ import java.util.HashMap;
 
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
 import android.util.Log;
-import android.widget.EditText;
-import android.widget.RelativeLayout;
-import android.widget.Spinner;
 
 public class GrammarUtils {
 	private static final String TAG = "GrammarUtils";
@@ -44,7 +43,16 @@ public class GrammarUtils {
 	private static final String PREFIX_GRAMMAR_TYPE_PREPOSITION = "!";
 	private static final String PREFIX_GRAMMAR_TYPE_IDIOM = "*";
 	
+	public static final int TYPE_TEST_OBJECTIVE = 0;
+	public static final int TYPE_TEST_SUBJECTIVE = 1;
+	
+	public static final int TYPE_QUESTION_MEANING = 0;
+	public static final int TYPE_QUESTION_GRAMMAR = 1;
+	
 	public static final int DEFAULT_MEANING_COUNT = 10;
+	public static final int DEFAULT_TEST_COUNT = 20;
+	public static final int DEFAULT_EXAMPLE_COUNT = 4;
+	public static final int DEFAULT_ANSWER_COUNT = 1;
 	
 	private static final HashMap<Integer, String> MAP_GRAMMAR_TYPE_TO_STRING = new HashMap<Integer, String> () { 
 		{
@@ -95,7 +103,7 @@ public class GrammarUtils {
 		
 		public String toString() {
 			StringBuilder sb = new StringBuilder();
-			sb.append("Meanins {");
+			sb.append("Meanins : {");
 			sb.append("type = " + mType);
 			sb.append(", typeStr = " + mTypeStr);
 			sb.append(", meaning = " + mMeaning);
@@ -136,6 +144,99 @@ public class GrammarUtils {
 		
 		public void setGrammar(String grammar) {
 			mGrammar = grammar;
+		}
+		
+		public String toString() {
+			StringBuilder sb = new StringBuilder();
+			sb.append("Grammar : " + mGrammar + " : {");
+			int size = mMeanings.size();
+			for (int i = 0; i < size; i++) {
+				sb.append(mMeanings.get(i).toString());
+				if (i < size - 1) {
+					sb.append(", ");
+				}
+			}
+			sb.append("}");
+			return sb.toString();
+		}
+	}
+
+	public static class Question {
+		public int mType = -1; // use only meaning question.
+		public String mSubject = null;
+		public int mExampleCount = 0; // use only objective question;
+		public ArrayList<String> mExamples = null; // use only objective question.
+		public ArrayList<String> mCorrectAnswerStr = null; // use only subjective question.
+		public ArrayList<Integer> mCorrectAnswer = null; // use only objective question.
+		public boolean mIsRight = false;
+		
+		public String toString() {
+			StringBuilder sb = new StringBuilder();
+			sb.append("Question : {");
+			sb.append("type = " + mType);
+			sb.append(", Subject = " + mSubject);
+			sb.append(", ExampleCount = " + mExampleCount);
+			if (mExamples != null) {
+				sb.append(", mExamples { ");
+				for (int i = 0; i < mExamples.size(); i++) {
+					sb.append(mExamples.get(i));
+					if (i < mExamples.size() - 1)
+						sb.append(", ");
+				}
+				sb.append("}");
+			}
+			if (mCorrectAnswerStr != null) {
+				sb.append(", mCorrectAnswerStr { ");
+				for (int i = 0; i < mCorrectAnswerStr.size(); i++) {
+					sb.append(mCorrectAnswerStr.get(i));
+					if (i < mCorrectAnswerStr.size() - 1)
+						sb.append(", ");
+				}
+				sb.append("}");
+			}
+			
+			if (mCorrectAnswer != null) {
+				sb.append(", mCorrectAnswer { ");
+				for (int i = 0; i < mCorrectAnswer.size(); i++) {
+					sb.append(mCorrectAnswer.get(i));
+					if (i < mCorrectAnswer.size() - 1)
+						sb.append(", ");
+				}
+				sb.append("}");
+			}
+			
+			sb.append(", isRight = " + mIsRight);
+			sb.append("}");
+			
+			return sb.toString();
+		}
+	}
+	
+	public static class Questions {
+		public int mTestType = -1;
+		public int mQuestionType = -1;
+		public int mScore = 0;
+		public int mCount = 0;
+		public int mSolvedCount = 0;
+		public ArrayList<Question> mQuestions = null;
+		
+		public String toString() {
+			StringBuilder sb = new StringBuilder();
+			sb.append("Questions : {");
+			sb.append("TestType = " + mTestType);
+			sb.append(", QuestionType = " + mQuestionType);
+			sb.append(", Score = " + mScore);
+			if (mQuestions != null) {
+				sb.append(", Questons = {");
+				for (int i = 0; i < mQuestions.size(); i++) {
+					sb.append(mQuestions.get(i).toString());
+					if (i < mQuestions.size() - 1)
+						sb.append(", ");
+				}
+				sb.append("}");
+			}
+			sb.append("}");
+			return sb.toString();
 		}
 	}
 	
@@ -363,15 +464,370 @@ public class GrammarUtils {
 		return true;
 	}
 	
-	private static int getGrammarTypeByPrefix(String prefix) {
+	public static int getGrammarTypeByPrefix(String prefix) {
 		return MAP_GRAMMAR_PREFIX_TO_TYPE.get(prefix);
 	}
 	
-	private static String getGrammarTypeStringByPrefix(String prefix) {
+	public static String getGrammarTypeStringByPrefix(String prefix) {
 		return MAP_GRAMMAR_PREFIX_TO_STRING.get(prefix);
 	}
 	
-	private static String getGrammarTypeStringByType(int type) {
+	public static String getGrammarTypeStringByType(int type) {
 		return MAP_GRAMMAR_TYPE_TO_STRING.get(type);
+	}
+	
+	public static Grammar getGrammarInfo(Context context, long grammarId) {
+		if (grammarId < 0) {
+			Log.e(TAG, "failed to getGrammarInfo grammarId = " + grammarId);
+			return null;
+		}
+		
+		Grammar grammarInfo = new Grammar();
+		DatabaseHelper dbHelper = getDatabaseHelper(context);
+		
+		String selection = GrammarProviderContract.Grammars._ID + " = ?";		
+		String[] selectionArgs = { String.valueOf(grammarId) };
+		
+		String[] projection = {
+				GrammarProviderContract.Grammars.COLUMN_NAME_GRAMMAR
+		};
+		
+		SQLiteDatabase db = dbHelper.getReadableDatabase();
+		Cursor cursor = db.query(GrammarProviderContract.Grammars.TABLE_NAME, 
+				projection,
+				selection,
+				selectionArgs,
+				null,
+				null,
+				GrammarProviderContract.Grammars.DEFAULT_SORT_ORDER);
+		
+		if (cursor != null) {
+			if (cursor.moveToFirst()) {
+				int columnIndex = cursor.getColumnIndex(GrammarProviderContract.Grammars.COLUMN_NAME_GRAMMAR);
+				grammarInfo.mGrammar = cursor.getString(columnIndex);
+			}
+			
+			cursor.close();
+		}
+		
+		if (grammarInfo.mGrammar == null) {
+			Log.e(TAG, "failed to getGrammarInfo because there is no grammar that matched given id = " + grammarId);
+			return null;
+		}
+		
+		projection = new String[] {
+				GrammarProviderContract.Meanings._ID,
+				GrammarProviderContract.Meanings.COLUMN_NAME_TYPE,
+				GrammarProviderContract.Meanings.COLUMN_NAME_WORD
+		};
+
+		selection = GrammarProviderContract.Meanings._ID + " IN ("
+				+ "SELECT " + GrammarProviderContract.Mappings.COLUMN_NAME_MEANING_ID
+				+ " FROM " + GrammarProviderContract.Mappings.TABLE_NAME
+				+ " WHERE " + GrammarProviderContract.Mappings.COLUMN_NAME_GRAMMAR_ID + " = ?)";
+		selectionArgs = new String[] { String.valueOf(grammarId) };
+
+		cursor = db.query(GrammarProviderContract.Meanings.TABLE_NAME, 
+				projection,
+				selection,
+				selectionArgs,
+				null,
+				null,
+				GrammarProviderContract.Meanings.DEFAULT_SORT_ORDER);
+
+		if (cursor != null) {
+			Log.e(TAG, "getChildrenCursor count = " + cursor.getCount());
+			if (cursor.moveToFirst()) {
+				int typeColumnIndex = cursor.getColumnIndex(GrammarProviderContract.Meanings.COLUMN_NAME_TYPE);
+				int wordColumnIndex = cursor.getColumnIndex(GrammarProviderContract.Meanings.COLUMN_NAME_WORD);
+				for (int i = 0; i < cursor.getCount(); i++) {
+					int type = cursor.getInt(typeColumnIndex);
+					String meaning = cursor.getString(wordColumnIndex);
+					String typeStr = GrammarUtils.getGrammarTypeStringByType(type);
+					grammarInfo.addMeaing(type, typeStr, meaning);
+					cursor.moveToNext();
+				}				
+			}
+			
+			cursor.close();
+		}
+		
+		return grammarInfo;
+	}
+	
+	public static Questions generateTestSource(Context context, int testType, int questionType,
+			int questionCount, int exampleCount, int answerCount) {
+		Log.e(TAG, "generateTestSource testType = " + testType + " questionType = " + questionType + " questionCount = " + questionCount
+				+ " exampleCount = " + exampleCount + " answerCount = " + answerCount);
+		DatabaseHelper dbHelper = getDatabaseHelper(context);
+		
+		if (testType < 0 || testType == 0 && questionType < 0) {
+			Log.e(TAG, "failed to generateTestSource testType = " + testType + " questionType = " + questionType);
+			return null;
+		}
+		
+		String tableName = null;
+		String[] projections = null;
+		String subjectColumnName = null;
+		String indexColumnName = null;
+		String typeColumnName = GrammarProviderContract.Meanings.COLUMN_NAME_TYPE;
+		String exampleTableName = null;
+		String[] exampleProjections = null;
+		boolean needExample = true;
+				
+		if (testType == TYPE_TEST_SUBJECTIVE) {
+			questionType = TYPE_QUESTION_GRAMMAR;
+			needExample = false;
+		}
+		
+		if (questionType == TYPE_QUESTION_MEANING) {
+			tableName = GrammarProviderContract.Grammars.TABLE_NAME;
+			subjectColumnName = GrammarProviderContract.Grammars.COLUMN_NAME_GRAMMAR;
+			indexColumnName = GrammarProviderContract.Grammars._ID;
+			projections = new String[] {
+					GrammarProviderContract.Grammars._ID,
+					GrammarProviderContract.Grammars.COLUMN_NAME_GRAMMAR
+			};
+		} else if (questionType == TYPE_QUESTION_GRAMMAR) {
+			tableName = GrammarProviderContract.Meanings.TABLE_NAME;
+			subjectColumnName = GrammarProviderContract.Meanings.COLUMN_NAME_WORD;
+			indexColumnName = GrammarProviderContract.Meanings._ID;
+			projections = new String[] {
+					GrammarProviderContract.Meanings._ID,
+					GrammarProviderContract.Meanings.COLUMN_NAME_WORD,
+					GrammarProviderContract.Meanings.COLUMN_NAME_TYPE
+			};
+		} else {
+			Log.e(TAG, "failed to generateTestSource testType = " + testType + " questionType = " + questionType);
+			return null;
+		}
+		
+		SQLiteDatabase db = dbHelper.getReadableDatabase();
+		
+		Cursor cursor = db.query(tableName, 
+				projections,
+				null,
+				null,
+				null,
+				null,
+				"RANDOM()",
+				String.valueOf(questionCount));
+		
+		boolean generateSuccess = true;
+		Questions questions = new Questions();
+		questions.mQuestionType = questionType;
+		questions.mTestType = testType;
+		questions.mCount = questionCount;
+		
+		questions.mQuestions = new ArrayList<Question>();
+		
+		if (cursor != null) {
+			int cursorCount = cursor.getCount();
+			if (cursor.moveToFirst()) {		
+				int IDColumnIndex = cursor.getColumnIndex(indexColumnName);
+				int subjectColumnIndex = cursor.getColumnIndex(subjectColumnName);
+				int typeColumnIndex = cursor.getColumnIndex(typeColumnName);
+				
+				for (int i = 0 ; i < questionCount; i++) {
+					long subjectId = cursor.getLong(IDColumnIndex);
+					String subject = cursor.getString(subjectColumnIndex);
+					Question question = new Question();
+					question.mSubject = subject;
+					
+					if (questionType == TYPE_QUESTION_GRAMMAR) {							
+						question.mType = cursor.getInt(typeColumnIndex);
+					}
+						
+					if (testType == TYPE_TEST_OBJECTIVE) {
+						ArrayList<String> exams = new ArrayList<String>();
+						ArrayList<Integer> correct = getExamples(context, questionType, subjectId, exams, exampleCount, answerCount);
+						
+						if (correct == null || correct.size() <= 0 || exams.size() <= 0) {
+							Log.e(TAG, "failed to generateTestSource while generate examples.");								
+							generateSuccess = false;
+							break;
+						}
+						question.mCorrectAnswer = correct;
+						question.mExamples = exams;
+						question.mExampleCount = exampleCount;
+					} else if (testType == TYPE_TEST_SUBJECTIVE){
+						ArrayList<String> correct = getGrammarsByMeaningId(context, subjectId);
+						if (correct == null || correct.size() <= 0) {
+							Log.e(TAG, "failed to generateTestSource while generate examples.");
+							generateSuccess = false;
+							break;
+						}
+						question.mCorrectAnswerStr = correct;
+					}
+					questions.mQuestions.add(question);
+					if (i < cursorCount) {
+						cursor.moveToNext();
+					} else {
+						int next = (int)(Math.random() * cursorCount);
+						cursor.move(next);
+					}
+				}
+			} else {
+				Log.e(TAG, "failed to generateTestSource because cursor exception.");
+				generateSuccess = false;
+			}
+			
+			cursor.close();
+		}
+		
+		if (!generateSuccess) return null;
+		
+		return questions;
+	}
+	
+	private static ArrayList<Integer> getExamples(Context context, int questionType, long id,
+			ArrayList<String> exams, int exampleCount, int answerCount) {
+		Log.e(TAG, "getExamples questionType = " + questionType + " id = " + id + " exampleCount = " + exampleCount + " answerCount = " + answerCount);
+		DatabaseHelper dbHelper = getDatabaseHelper(context);
+		if (id < 0) {
+			Log.e(TAG, "failed to getExamples id = " + id);
+			return null;
+		}
+		
+		SQLiteDatabase db = dbHelper.getReadableDatabase();
+		String answerSelection = null;
+		String exampleSelection = null;
+		String tableName = null;
+		String[] selectionArgs = { String.valueOf(id) };
+		String exampleColumnName = null;
+		
+		if (questionType == TYPE_QUESTION_GRAMMAR) {
+			exampleColumnName = GrammarProviderContract.Grammars.COLUMN_NAME_GRAMMAR;
+			tableName = GrammarProviderContract.Grammars.TABLE_NAME;
+			
+			String mappingSelection = "SELECT " + GrammarProviderContract.Mappings.COLUMN_NAME_GRAMMAR_ID
+					+ " FROM " + GrammarProviderContract.Mappings.TABLE_NAME
+					+ " WHERE " + GrammarProviderContract.Mappings.COLUMN_NAME_MEANING_ID + " = ?";
+			
+			answerSelection = GrammarProviderContract.Grammars._ID + " IN (" + mappingSelection + ")";
+			exampleSelection = GrammarProviderContract.Grammars._ID + " NOT IN (" + mappingSelection + ")"; 
+		} else if (questionType == TYPE_QUESTION_MEANING) {
+			tableName = GrammarProviderContract.Meanings.TABLE_NAME;
+			exampleColumnName = GrammarProviderContract.Meanings.COLUMN_NAME_WORD;
+			String mappingSelection = "SELECT " + GrammarProviderContract.Mappings.COLUMN_NAME_MEANING_ID
+					+ " FROM " + GrammarProviderContract.Mappings.TABLE_NAME
+					+ " WHERE " + GrammarProviderContract.Mappings.COLUMN_NAME_GRAMMAR_ID + " = ?";
+			answerSelection = GrammarProviderContract.Meanings._ID + " IN (" + mappingSelection + ")";
+			exampleSelection = GrammarProviderContract.Meanings._ID + " NOT IN (" + mappingSelection + ")";
+		} else {
+			Log.e(TAG, "failed to getExamples questionType = " + questionType);
+			return null;
+		}
+		
+		String[] projections = { exampleColumnName };
+		
+		Cursor cursor = db.query(tableName, 
+				projections,
+				exampleSelection,
+				selectionArgs,
+				null,
+				null,
+				"RANDOM()",
+				String.valueOf(exampleCount));
+		
+		if (cursor != null) {
+			int cursorCount = cursor.getCount();
+			int exampleColumnIndex = cursor.getColumnIndex(exampleColumnName); 
+			if (cursor.moveToFirst()) {
+				for (int i = 0; i < exampleCount; i++) {
+					String answer = cursor.getString(exampleColumnIndex);
+					exams.add(answer);
+					if (i < cursorCount) {
+						cursor.moveToNext();
+					} else {
+						int next = (int)(Math.random() * cursorCount);
+						cursor.move(next);
+					}
+				}
+			}
+			cursor.close();
+		} else {
+			Log.e(TAG, "failed to query for examples in getExamples().");
+			return null;
+		}
+		
+		cursor = db.query(tableName, 
+				projections,
+				answerSelection,
+				selectionArgs,
+				null,
+				null,
+				"RANDOM()",
+				String.valueOf(answerCount));
+		
+		ArrayList<Integer> correct = new ArrayList<Integer>();
+		if (cursor != null) {
+			int cursorCount = cursor.getCount();
+			int exampleColumnIndex = cursor.getColumnIndex(exampleColumnName); 
+			if (cursor.moveToFirst()) {
+				for (int i = 0; i < cursorCount; i++) {
+					String answer = cursor.getString(exampleColumnIndex);
+					int index = -1;
+					do {
+						index = (int)(Math.random() * exampleCount);
+					} while(index >= exampleCount || correct.contains(index));
+					
+					correct.add(index);
+					exams.set(index, answer);
+				}
+			}
+			cursor.close();
+		}
+		
+		if (correct == null || correct.size() <= 0) {
+			Log.e(TAG, "failed to query for correct in getExamples().");
+			return null;
+		}
+		
+		return correct;
+	}
+	
+	public static ArrayList<String> getGrammarsByMeaningId(Context context, long id) {
+		DatabaseHelper dbHelper = getDatabaseHelper(context);
+		
+		if (id < 0) {
+			Log.e(TAG, "failed to getGrammarsByMeaningId id = " + id);
+			return null;
+		}
+		
+		SQLiteDatabase db = dbHelper.getReadableDatabase();
+		
+		String [] projections = {
+			GrammarProviderContract.Grammars.COLUMN_NAME_GRAMMAR
+		};
+		
+		String selection = GrammarProviderContract.Grammars._ID + " IN ("
+				+ "SELECT " + GrammarProviderContract.Mappings.COLUMN_NAME_GRAMMAR_ID
+				+ " FROM " + GrammarProviderContract.Mappings.TABLE_NAME
+				+ " WHERE " + GrammarProviderContract.Mappings.COLUMN_NAME_MEANING_ID + " = ?)";
+		String[] selectionArgs = { String.valueOf(id) };
+		
+		Cursor cursor = db.query(GrammarProviderContract.Grammars.TABLE_NAME, 
+				projections,
+				selection,
+				selectionArgs,
+				null,
+				null,
+				GrammarProviderContract.Grammars.DEFAULT_SORT_ORDER);
+		
+		ArrayList<String> result = null;
+		if (cursor != null) {
+			if (cursor.moveToFirst()) {
+				int cursorCount = cursor.getCount();
+				int columnIndex = cursor.getColumnIndex(GrammarProviderContract.Grammars.COLUMN_NAME_GRAMMAR);
+				result = new ArrayList<String>();
+				for (int i = 0; i < cursorCount; i++) {
+					result.add(cursor.getString(columnIndex));
+				}
+			}
+			cursor.close();
+		}		
+		
+		return result;
 	}
 }

@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string-array name="array_type_test">
+        <item >@string/type_label_test_objective</item>
+        <item >@string/type_label_test_subjective</item>
+    </string-array>
     <string-array name="arry_type">
         <item >Noun</item>
         <item >Verb</item>

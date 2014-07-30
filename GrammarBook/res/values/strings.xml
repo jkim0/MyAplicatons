@@ -36,5 +36,24 @@
     <string name="title_activity_grammar_preference">GrammarPreferenceActivity</string>
     <string name="msg_meaning_row_full">Can not add meaning row any more.</string>
     <string name="msg_load_data_done">Data load from File finished.</string>
+    <string name="msg_progress_loading_data">Loading data from files</string>
+    <string name="msg_no_grammar_in_edit">Please input grammar.</string>
+    <string name="btn_label_ok">Ok</string>
+    <string name="title_item_list">Items</string>
+    <string name="title_item_detail">Item Detail</string>
+    <string name="title_select_test">Select test type</string>
+    <string name="type_label_test_objective">Objective</string>
+    <string name="type_label_test_subjective">Subjective</string>
+    <string name="btn_label_cancel">Cancel</string>
+    <string name="btn_label_start">Start</string>
+    <string name="type_label_question_meaning">Meaning</string>
+    <string name="type_label_question_grammar">Grammar</string>
+    <string name="radio_group_label_type_test">Type of Test</string>
+    <string name="radio_group_label_type_question">Type of question</string>
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="btn_label_completed">Complete</string>
+    <string name="label_score">Score</string>
+    <string name="label_corrrect">Correct count</string>
+    <string name="label_incorrect">Incorrect count</string>
 
 </resources>

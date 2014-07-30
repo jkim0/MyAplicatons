@@ -78,6 +78,8 @@ public class DatabaseHelper extends SQLiteOpenHelper
 		db.execSQL("DROP TABLE IF EXISTS " + GrammarProviderContract.Grammars.TABLE_NAME);
 		db.execSQL("DROP TABLE IF EXISTS " + GrammarProviderContract.Meanings.TABLE_NAME);
 		db.execSQL("DROP TABLE IF EXISTS " + GrammarProviderContract.Mappings.TABLE_NAME);
+		db.execSQL("DROP TABLE IF EXISTS decrease_meaning_refer_mount");
+		db.execSQL("DROP TABLE IF EXISTS increase_meaning_refer_mount");
 		
 		// Recreates the database with a new version
 		onCreate(db);

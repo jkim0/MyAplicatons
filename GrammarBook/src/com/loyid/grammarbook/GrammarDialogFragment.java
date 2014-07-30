@@ -1,5 +1,6 @@
 package com.loyid.grammarbook;
 
+import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.os.Bundle;
@@ -13,6 +14,7 @@ public class GrammarDialogFragment extends DialogFragment {
 	public static final String FRAGMENT_ARGS_MESSAGE = "message";
 	
 	public static final int DIALOG_TYPE_PROGRESS = 0;
+	public static final int DIALOG_TYPE_ALERT_MSG = 1;
 	
 	public static GrammarDialogFragment newInstance(int id) {
 		GrammarDialogFragment f = new GrammarDialogFragment();
@@ -31,6 +33,13 @@ public class GrammarDialogFragment extends DialogFragment {
 		switch(id) {
 		case DIALOG_TYPE_PROGRESS:
 			return ProgressDialog.show(getActivity(), title, message);
+		case DIALOG_TYPE_ALERT_MSG:
+			return new AlertDialog.Builder(getActivity())
+				.setIcon(android.R.drawable.ic_dialog_alert)
+				.setTitle(title)
+				.setMessage(message)
+				.setPositiveButton(R.string.btn_label_ok, null)
+				.create();
 		}
 		
 		return null;

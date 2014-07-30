@@ -77,7 +77,7 @@ public final class GrammarProviderContract {
 		/**
 		 * The default sort order for this table
 		 */
-		public static final String DEFAULT_SORT_ORDER = COLUMN_NAME_WORD + " ASC"; //ASC or DESC
+		public static final String DEFAULT_SORT_ORDER = COLUMN_NAME_TYPE + " ASC"; //ASC or DESC
 	}
 	
 	public static final class Mappings implements BaseColumns {

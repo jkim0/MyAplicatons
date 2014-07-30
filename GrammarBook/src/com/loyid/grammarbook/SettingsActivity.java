@@ -1,17 +1,16 @@
 package com.loyid.grammarbook;
 
 import android.annotation.TargetApi;
+import android.app.DialogFragment;
+import android.app.Fragment;
+import android.app.FragmentTransaction;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.Configuration;
-import android.database.sqlite.SQLiteDatabase;
-import android.media.Ringtone;
-import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
 import android.preference.ListPreference;
@@ -21,16 +20,9 @@ import android.preference.PreferenceActivity;
 import android.preference.PreferenceCategory;
 import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
-import android.preference.RingtonePreference;
-import android.text.TextUtils;
 import android.util.Log;
 import android.widget.Toast;
 
-import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.util.List;
 
 /**
@@ -57,8 +49,6 @@ public class SettingsActivity extends PreferenceActivity {
 	private static final int REQUEST_FILE_SELECT_CODE = 0;
 	
 	private static final int MSG_LOAD_DATA_FROM_FILE = 0;
-	
-	private DatabaseHelper mDatabaseHelper = null;
 	
 	private MessageHandler mHandler = null;
 
@@ -352,10 +342,40 @@ public class SettingsActivity extends PreferenceActivity {
 		}
 	}
 	
+	private void showProgressDialog(int type) {
+		FragmentTransaction ft = getFragmentManager().beginTransaction();
+		Fragment prev = getFragmentManager().findFragmentByTag("dialog");
+		if (prev != null) {
+			ft.remove(prev);
+		}
+		
+		ft.addToBackStack(null);
+		
+		// Create and show the dialog.
+		DialogFragment newFragment = GrammarDialogFragment.newInstance(GrammarDialogFragment.DIALOG_TYPE_PROGRESS);
+		Bundle args = newFragment.getArguments();
+		args.putString(GrammarDialogFragment.FRAGMENT_ARGS_MESSAGE, getString(R.string.msg_progress_loading_data));
+		newFragment.setCancelable(false);
+		newFragment.show(ft, "dialog");
+	}
+	
+	private void dismissDialog() {
+		FragmentTransaction ft = getFragmentManager().beginTransaction();
+		Fragment prev = getFragmentManager().findFragmentByTag("dialog");
+		if (prev != null) {
+			DialogFragment df = (DialogFragment)prev;
+			df.dismiss();
+			ft.remove(prev);
+		}
+		
+		ft.addToBackStack(null);
+	}
+	
 	private class LoadDataAyncTask extends AsyncTask<Uri, Void, Boolean> {
 		@Override
 		protected void onPreExecute() {
 			// TODO Auto-generated method stub
+			showProgressDialog(0);
 			super.onPreExecute();
 		}
 
@@ -368,6 +388,7 @@ public class SettingsActivity extends PreferenceActivity {
 		@Override
 		protected void onPostExecute(Boolean result) {
 			// TODO Auto-generated method stub
+			dismissDialog();
 			Toast.makeText(SettingsActivity.this, R.string.msg_load_data_done, Toast.LENGTH_SHORT).show();
 			super.onPostExecute(result);
 		}

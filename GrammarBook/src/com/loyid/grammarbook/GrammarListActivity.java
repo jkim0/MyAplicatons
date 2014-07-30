@@ -1,236 +1,98 @@
 package com.loyid.grammarbook;
 
-import java.util.Locale;
-
-import android.speech.tts.TextToSpeech;
-import android.speech.tts.TextToSpeech.OnInitListener;
-import android.support.v7.app.ActionBarActivity;
-import android.content.Context;
-import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
+import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
-import android.view.Menu;
+import android.app.Activity;
+import android.support.v4.app.NavUtils;
 import android.view.MenuItem;
-import android.view.View;
-import android.view.View.OnClickListener;
-import android.view.ViewGroup;
-import android.widget.Button;
-import android.widget.ExpandableListView;
-import android.widget.SimpleCursorTreeAdapter;
-import android.widget.TextView;
-import android.widget.Toast;
 
-public class GrammarListActivity extends ActionBarActivity implements OnInitListener {
-	private static final String TAG = "GrammarListActivity";
+/**
+ * An activity representing a list of Items. This activity has different
+ * presentations for handset and tablet-size devices. On handsets, the activity
+ * presents a list of items, which when touched, lead to a
+ * {@link GrammarDetailActivity} representing item details. On tablets, the
+ * activity presents the list of items and item details side-by-side using two
+ * vertical panes.
+ * <p>
+ * The activity makes heavy use of fragments. The list of items is a
+ * {@link GrammarListFragment} and the item details (if present) is a
+ * {@link GrammarDetailFragment}.
+ * <p>
+ * This activity also implements the required {@link GrammarListFragment.Callbacks}
+ * interface to listen for item selections.
+ */
+public class GrammarListActivity extends Activity implements
+		GrammarListFragment.OnItemSelectedListener {
+
+	/**
+	 * Whether or not the activity is in two-pane mode, i.e. running on a tablet
+	 * device.
+	 */
+	private boolean mTwoPane;
 	
-	private ExGrammarListAdapter mListAdapter = null;
-	
-	private ExpandableListView mListView = null;
-	
-	private DatabaseHelper mDatabaseHelper = null;
-	private GrammarViewBinder mViewBinder = null;
-	
-	private TextToSpeech mTTS;
-	
+	private GrammarListFragment mGrammarListFragment = null; 
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_grammar_list);
-		
-		mTTS = new TextToSpeech(this, this);
-		
-		mDatabaseHelper = new DatabaseHelper(this);
-		
-		mViewBinder = new GrammarViewBinder(this);
-		
-		mListView = (ExpandableListView)findViewById(R.id.ex_grammar_list);
-		mListAdapter = new ExGrammarListAdapter(this, null, R.layout.grammar_group_layout,
-				new String[] {GrammarProviderContract.Grammars.COLUMN_NAME_GRAMMAR,
-					GrammarProviderContract.Grammars.COLUMN_NAME_MEANING},
-				new int[] {R.id.grammar, R.id.meaning},
-				R.layout.grammar_child_layout,
-				new String[] {GrammarProviderContract.Meanings.COLUMN_NAME_TYPE,
-					GrammarProviderContract.Meanings.COLUMN_NAME_WORD},
-				new int[] {R.id.child_type, R.id.child_meaning});
-		mListAdapter.setViewBinder(mViewBinder);
-		mListView.setAdapter(mListAdapter);
-		
-		loadGrammarList();
-	}
+		// Show the Up button in the action bar.
+		getActionBar().setDisplayHomeAsUpEnabled(true);
 
-	@Override
-	public boolean onCreateOptionsMenu(Menu menu) {
-		// Inflate the menu; this adds items to the action bar if it is present.
-		getMenuInflater().inflate(R.menu.grammar_list, menu);
-		return true;
+		mGrammarListFragment = (GrammarListFragment) getFragmentManager().findFragmentById(R.id.grammar_list);
+		mGrammarListFragment.setOnItemSelectedListener(this);
+		if (findViewById(R.id.grammar_detail_container) != null) {
+			// The detail container view will be present only in the
+			// large-screen layouts (res/values-large and
+			// res/values-sw600dp). If this view is present, then the
+			// activity should be in two-pane mode.
+			mTwoPane = true;
+
+			// In two-pane mode, list items should be given the
+			// 'activated' state when touched.
+			mGrammarListFragment.setActivateOnItemClick(true);
+		}
+
+		// TODO: If exposing deep links into your app, handle intents here.
 	}
 
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
-		// Handle action bar item clicks here. The action bar will
-		// automatically handle clicks on the Home/Up button, so long
-		// as you specify a parent activity in AndroidManifest.xml.
 		int id = item.getItemId();
-		if (id == R.id.action_settings) {
+		if (id == android.R.id.home) {
+			// This ID represents the Home or Up button. In the case of this
+			// activity, the Up button is shown. Use NavUtils to allow users
+			// to navigate up one level in the application structure. For
+			// more details, see the Navigation pattern on Android Design:
+			//
+			// http://developer.android.com/design/patterns/navigation.html#up-vs-back
+			//
+			NavUtils.navigateUpFromSameTask(this);
 			return true;
 		}
 		return super.onOptionsItemSelected(item);
 	}
-	
-	private class GrammarViewBinder implements SimpleCursorTreeAdapter.ViewBinder {
-		private Context mContext = null;
-		
-		public GrammarViewBinder(Context context) {
-			mContext = context;
-		}
-		@Override
-		public boolean setViewValue(View view, Cursor cursor, int columnIndex) {
-			// TODO Auto-generated method stub
-			int id = view.getId();
-			switch (id) {
-			/*
-			case R.id.grammar:
-				mListAdapter.setViewText((TextView)view, text);
-				break;
-			*/
-			case R.id.meaning:
-				String text = cursor.getString(columnIndex);
-				String[] group = text.split("#");
-				StringBuilder sb = new StringBuilder();
-				int size = group.length;
-				for (int i = 0; i < size; i++) {
-					String[] means = group[i].split("%");
-					sb.append(means[1] + " - " + means[2]);
-					if (i != size-1) {
-						sb.append(", ");
-					}
-				}
-				mListAdapter.setViewText((TextView)view, sb.toString());
-				return true;
-			case R.id.child_type:
-				int type = cursor.getInt(columnIndex);
-				String[] types = mContext.getResources().getStringArray(R.array.arry_type);
-				mListAdapter.setViewText((TextView)view, types[type] + " - ");
-				return true;
-			/*
-			case R.id.child_meaning:
-				break;
-			*/
-			}
-			return false;
-		}
-		
-	}
-	
-	public class ExGrammarListAdapter extends SimpleCursorTreeAdapter {
-
-		public ExGrammarListAdapter(Context context, Cursor cursor,
-				int collapsedGroupLayout,
-				String[] groupFrom, int[] groupTo, int childLayout,
-				String[] childFrom, int[] childTo) {
-			super(context, cursor, collapsedGroupLayout, groupFrom,
-					groupTo, childLayout, childFrom, childTo);
-			// TODO Auto-generated constructor stub
-		}
-
-		@Override
-		protected Cursor getChildrenCursor(Cursor groupCursor) {
-			// TODO Auto-generated method stub
-			int columnIndex = groupCursor.getColumnIndex(GrammarProviderContract.Grammars._ID);
-			long grammarId = groupCursor.getLong(columnIndex);
-			SQLiteDatabase db = mDatabaseHelper.getReadableDatabase();
-			String[] projection = {
-					GrammarProviderContract.Meanings._ID,
-					GrammarProviderContract.Meanings.COLUMN_NAME_TYPE,
-					GrammarProviderContract.Meanings.COLUMN_NAME_WORD
-			};
-			
-			String selection = GrammarProviderContract.Meanings._ID + " IN ("
-					+ "SELECT " + GrammarProviderContract.Mappings.COLUMN_NAME_MEANING_ID
-					+ " FROM " + GrammarProviderContract.Mappings.TABLE_NAME
-					+ " WHERE " + GrammarProviderContract.Mappings.COLUMN_NAME_GRAMMAR_ID + " = ?)";
-			String[] selectionArgs = { String.valueOf(grammarId) };
-			
-			Cursor cursor = db.query(GrammarProviderContract.Meanings.TABLE_NAME, 
-					projection,
-					selection,
-					selectionArgs,
-					null,
-					null,
-					GrammarProviderContract.Meanings.DEFAULT_SORT_ORDER);
-			
-			if (cursor != null) {
-				Log.e(TAG, "getChildrenCursor count = " + cursor.getCount());
-			} else {
-				Log.e(TAG, "getChildrendCursor cursor is null");
-			}
-			return cursor;
-		}
-		
-		@Override
-	    protected void bindGroupView(View view, Context context, Cursor cursor, boolean isExpanded) {
-			super.bindGroupView(view, context, cursor, isExpanded);
-			TextView text = (TextView)view.findViewById(R.id.meaning);
-			if (isExpanded) {
-				text.setVisibility(ViewGroup.GONE);
-			} else {
-				text.setVisibility(ViewGroup.VISIBLE);
-			}
-			
-			int columnIndex = cursor.getColumnIndex(GrammarProviderContract.Grammars.COLUMN_NAME_GRAMMAR);
-			final String grammar = cursor.getString(columnIndex);
-			Button ttsBtn = (Button)view.findViewById(R.id.btn_play);
-			ttsBtn.setOnClickListener(new OnClickListener() {
-				@Override
-				public void onClick(View v) {
-					// TODO Auto-generated method stub
-					mTTS.setLanguage(Locale.US);
-					mTTS.speak(grammar, TextToSpeech.QUEUE_FLUSH, null);
-				}
-			});
-	    }
-		
-	}
-	
-	private void loadGrammarList() {
-		Log.e(TAG, "loadGrammarList");
-		SQLiteDatabase db = mDatabaseHelper.getReadableDatabase();
-		String[] projection = { 
-				GrammarProviderContract.Grammars._ID,
-				GrammarProviderContract.Grammars.COLUMN_NAME_GRAMMAR,
-				GrammarProviderContract.Grammars.COLUMN_NAME_MEANING
-		};
-		
-		Cursor cursor = db.query(GrammarProviderContract.Grammars.TABLE_NAME, 
-				projection,
-				null,
-				null,
-				null,
-				null,
-				GrammarProviderContract.Grammars.DEFAULT_SORT_ORDER);
-		
-		if (cursor != null) {
-			Log.e(TAG, "loadGrammarList cursor count = " + cursor.getCount());
-			mListAdapter.setGroupCursor(cursor);
-		} else {
-			Log.e(TAG, "loadGrammarList cursor is null");
-		}
-	}
 
 	@Override
-	public void onInit(int status) {
+	public void onItemSelected(long id) {
 		// TODO Auto-generated method stub
-		boolean isInit = status == TextToSpeech.SUCCESS;
-		int msg = isInit ? R.string.msg_init_tts_success : R.string.msg_init_tts_fail;
-		Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
-	}
-	
-	@Override
-	protected void onDestroy() {
-		if (mTTS != null) {
-			mTTS.shutdown();
+		if (mTwoPane) {
+			// In two-pane mode, show the detail view in this activity by
+			// adding or replacing the detail fragment using a
+			// fragment transaction.
+			Bundle arguments = new Bundle();
+			arguments.putLong(GrammarDetailFragment.ARG_GRAMMAR_ID, id);
+			GrammarDetailFragment fragment = new GrammarDetailFragment();
+			fragment.setArguments(arguments);
+			getFragmentManager().beginTransaction()
+					.replace(R.id.grammar_detail_container, fragment).commit();
+
+		} else {
+			// In single-pane mode, simply start the detail activity
+			// for the selected item ID.
+			Intent detailIntent = new Intent(this, GrammarDetailActivity.class);
+			detailIntent.putExtra(GrammarDetailFragment.ARG_GRAMMAR_ID, id);
+			startActivity(detailIntent);
 		}
-		super.onDestroy();
 	}
 }

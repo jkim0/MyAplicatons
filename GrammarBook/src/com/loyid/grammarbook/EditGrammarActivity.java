@@ -7,7 +7,9 @@ import com.loyid.grammarbook.GrammarUtils.Grammar;
 import android.speech.tts.TextToSpeech;
 import android.speech.tts.TextToSpeech.OnInitListener;
 import android.support.v7.app.ActionBarActivity;
-import android.content.ContentValues;
+import android.app.DialogFragment;
+import android.app.Fragment;
+import android.app.FragmentTransaction;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.database.Cursor;
@@ -35,8 +37,7 @@ public class EditGrammarActivity extends ActionBarActivity implements OnInitList
 	
 	private Button mBtnCheck = null;
 	private Button mBtnPlay = null;
-	
-	private long mGrammarId = -1;
+	private Button mBtnAdd = null;
 	
 	private Handler mHandler = null;
 	
@@ -77,6 +78,8 @@ public class EditGrammarActivity extends ActionBarActivity implements OnInitList
 				}
 			}			
 		});
+		
+		mBtnAdd = (Button)findViewById(R.id.btn_add);
 	}
 
 	@Override
@@ -127,11 +130,33 @@ public class EditGrammarActivity extends ActionBarActivity implements OnInitList
 		recalculateIndex();
 	}
 	
-	private void checkGrammar() {
-		mBtnCheck.setEnabled(false);
+	private void showAlertDialog(int resId) {
+		FragmentTransaction ft = getFragmentManager().beginTransaction();
+		Fragment prev = getFragmentManager().findFragmentByTag("dialog");
+		if (prev != null) {
+			ft.remove(prev);
+		}
 		
+		ft.addToBackStack(null);
+		
+		// Create and show the dialog.
+		DialogFragment newFragment = GrammarDialogFragment.newInstance(GrammarDialogFragment.DIALOG_TYPE_ALERT_MSG);
+		Bundle args = newFragment.getArguments();
+		args.putString(GrammarDialogFragment.FRAGMENT_ARGS_MESSAGE, getString(resId));
+		newFragment.show(ft, "dialog");
+	}
+	
+	private void checkGrammar() {		
 		EditText grammar = (EditText)findViewById(R.id.edit_grammar);
 		String strGrammar = grammar.getText().toString().trim();
+		
+		if (strGrammar == null || strGrammar.length() == 0) {
+			showAlertDialog(R.string.msg_no_grammar_in_edit);
+			return;
+		}
+		
+		mBtnCheck.setEnabled(false);
+		mBtnAdd.setEnabled(true);
 		
 		long grammarId = GrammarUtils.getGrammarId(this, strGrammar);
 		if (grammarId < 0) {
