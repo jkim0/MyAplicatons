@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.app.Activity;
 import android.support.v4.app.NavUtils;
+import android.util.Log;
 import android.view.MenuItem;
 
 /**
@@ -23,7 +24,8 @@ import android.view.MenuItem;
  */
 public class GrammarListActivity extends Activity implements
 		GrammarListFragment.OnItemSelectedListener {
-
+	private static final String TAG = "GrammarListActivity";
+	
 	/**
 	 * Whether or not the activity is in two-pane mode, i.e. running on a tablet
 	 * device.
@@ -34,6 +36,7 @@ public class GrammarListActivity extends Activity implements
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
+		Log.d(TAG, "onCreate()");
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_grammar_list);
 		// Show the Up button in the action bar.
@@ -54,6 +57,27 @@ public class GrammarListActivity extends Activity implements
 		}
 
 		// TODO: If exposing deep links into your app, handle intents here.
+	}
+
+	@Override
+	protected void onRestart() {
+		// TODO Auto-generated method stub
+		super.onRestart();
+		Log.d(TAG, "onRestart()");
+	}
+
+	@Override
+	protected void onResume() {
+		// TODO Auto-generated method stub
+		super.onResume();
+		Log.d(TAG, "onResume()");
+	}
+
+	@Override
+	protected void onStart() {
+		// TODO Auto-generated method stub
+		super.onStart();
+		Log.d(TAG, "onStart()");
 	}
 
 	@Override

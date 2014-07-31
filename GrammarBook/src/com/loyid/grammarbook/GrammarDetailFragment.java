@@ -36,8 +36,7 @@ public class GrammarDetailFragment extends Fragment implements OnInitListener {
 	private Grammar mGrammarInfo = null;
 	
 	private TextToSpeech mTTS;
-
-	private String[] mTypeArray = null;
+	
 	/**
 	 * Mandatory empty constructor for the fragment manager to instantiate the
 	 * fragment (e.g. upon screen orientation changes).
@@ -50,9 +49,7 @@ public class GrammarDetailFragment extends Fragment implements OnInitListener {
 		super.onCreate(savedInstanceState);
 		
 		mTTS = new TextToSpeech(getActivity(), this);
-		
-		mTypeArray = getResources().getStringArray(R.array.arry_type);
-
+	
 		if (getArguments().containsKey(ARG_GRAMMAR_ID)) {
 			// Load the dummy content specified by the fragment
 			// arguments. In a real-world scenario, use a Loader

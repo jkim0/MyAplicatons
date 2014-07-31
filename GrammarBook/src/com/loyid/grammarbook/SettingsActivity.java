@@ -294,13 +294,12 @@ public class SettingsActivity extends PreferenceActivity {
 	}
 	
 	public void reloadDataFromFile() {
-		loadDataFromFile();
-		
+		//loadDataFromFile();
 		Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
 		intent.addCategory(Intent.CATEGORY_OPENABLE);
 		intent.setType("*/*");
 		
-		//this.startActivityForResult(intent, REQUEST_FILE_SELECT_CODE);
+		this.startActivityForResult(intent, REQUEST_FILE_SELECT_CODE);
 	}
 	
 	@Override
