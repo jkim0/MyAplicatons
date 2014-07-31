@@ -7,6 +7,8 @@ import com.loyid.grammarbook.GrammarUtils.Grammar;
 import android.speech.tts.TextToSpeech;
 import android.speech.tts.TextToSpeech.OnInitListener;
 import android.support.v7.app.ActionBarActivity;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.app.DialogFragment;
 import android.app.Fragment;
 import android.app.FragmentTransaction;
@@ -47,6 +49,8 @@ public class EditGrammarActivity extends ActionBarActivity implements OnInitList
 	
 	private int mMaxLineCount = GrammarUtils.DEFAULT_MEANING_COUNT;
 	
+	private String mCurrentGrammar = null;
+	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -57,6 +61,28 @@ public class EditGrammarActivity extends ActionBarActivity implements OnInitList
 		mTTS = new TextToSpeech(this, this);
 		mDatabaseHelper = new DatabaseHelper(this);
 		setContentView(R.layout.activity_edit_grammar);
+		EditText edit = (EditText)findViewById(R.id.edit_grammar);
+		edit.addTextChangedListener(new TextWatcher() {
+			@Override
+			public void afterTextChanged(Editable s) {
+				// TODO Auto-generated method stub
+				mBtnCheck.setEnabled(true);				
+			}
+
+			@Override
+			public void beforeTextChanged(CharSequence s, int start, int count,
+					int after) {
+				// TODO Auto-generated method stub
+				
+			}
+
+			@Override
+			public void onTextChanged(CharSequence s, int start, int before,
+					int count) {
+				// TODO Auto-generated method stub
+				
+			}
+		});
 		mAddedItemList = (LinearLayout)findViewById(R.id.added_item_list);
 		mBtnCheck = (Button)findViewById(R.id.btn_check);
 		mBtnCheck.setOnClickListener(new OnClickListener() {
@@ -117,16 +143,31 @@ public class EditGrammarActivity extends ActionBarActivity implements OnInitList
 			return;
 		}
 		
-		RelativeLayout item = (RelativeLayout)getLayoutInflater().inflate(R.layout.added_item_layout, mAddedItemList, false);
-		Spinner spinner = (Spinner)item.findViewById(R.id.spinner_type);
+		int count = mAddedItemList.getChildCount();
+		RelativeLayout last = null;
+		if (count > 0) {
+			last = (RelativeLayout)mAddedItemList.getChildAt(count - 1);
+			EditText edit = (EditText)last.findViewById(R.id.edit_meaning);
+			String old = edit.getText().toString().trim();
+			if (old != null && old.length() > 0) {
+				last = (RelativeLayout)getLayoutInflater().inflate(R.layout.added_item_layout, mAddedItemList, false);
+				mAddedItemList.addView(last);
+			}
+		} else {
+			last = (RelativeLayout)getLayoutInflater().inflate(R.layout.added_item_layout, mAddedItemList, false);
+			mAddedItemList.addView(last);
+		}
+				
+		Spinner spinner = (Spinner)last.findViewById(R.id.spinner_type);
 		if (type > 0) {
 			spinner.setSelection(type);
 		}
+		
 		if (meaning != null) {
-			EditText edit = (EditText)item.findViewById(R.id.edit_meaning);
+			EditText edit = (EditText)last.findViewById(R.id.edit_meaning);
 			edit.setText(meaning);
 		}
-		mAddedItemList.addView(item);	
+		
 		recalculateIndex();
 	}
 	
@@ -154,6 +195,12 @@ public class EditGrammarActivity extends ActionBarActivity implements OnInitList
 			showAlertDialog(R.string.msg_no_grammar_in_edit);
 			return;
 		}
+		
+		if (mCurrentGrammar != null && mCurrentGrammar.equals(strGrammar)) {
+			Log.d(TAG, "checkGrammar() : new grammar is same with old grammar that was inputted.");
+			return;
+		}
+		mCurrentGrammar = strGrammar;
 		
 		mBtnCheck.setEnabled(false);
 		mBtnAdd.setEnabled(true);

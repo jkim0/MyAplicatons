@@ -5,12 +5,12 @@
         <item >@string/type_label_test_subjective</item>
     </string-array>
     <string-array name="arry_type">
-        <item >Noun</item>
-        <item >Verb</item>
-        <item >Adjective</item>
-        <item >Adverb</item>
-        <item >Preposition</item>
-        <item >Idiom</item>
+        <item >@string/label_grammar_type_noun</item>
+        <item >@string/label_grammar_type_verb</item>
+        <item >@string/label_grammar_type_adjective</item>
+        <item >@string/label_grammar_type_adverb</item>
+        <item >@string/label_grammar_type_preposition</item>
+        <item >@string/label_grammar_type_idiom</item>
     </string-array>
     
     <string-array name="pref_max_meaning_count_titles">

@@ -51,5 +51,12 @@
     <string name="label_score">Score</string>
     <string name="label_corrrect">Correct count</string>
     <string name="label_incorrect">Incorrect count</string>
+    <string name="label_grammar_type_noun">Noun</string>
+    <string name="label_grammar_type_verb">Verb</string>
+    <string name="label_grammar_type_adjective">Adjective</string>
+    <string name="label_grammar_type_adverb">Adverb</string>
+    <string name="label_grammar_type_preposition">Preposition</string>
+    <string name="label_grammar_type_idiom">Idiom</string>
+    <string name="type_unknown">Unknown</string>
 
 </resources>

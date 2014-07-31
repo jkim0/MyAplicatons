@@ -19,7 +19,6 @@ import android.widget.Toast;
 
 import com.loyid.grammarbook.GrammarUtils.Grammar;
 import com.loyid.grammarbook.GrammarUtils.Meaning;
-import com.loyid.grammarbook.PrepareTestFragment.OnFragmentInteractionListener;
 
 /**
  * A fragment representing a single Item detail screen. This fragment is either
@@ -34,11 +33,11 @@ public class GrammarDetailFragment extends Fragment implements OnInitListener {
 	 */
 	public static final String ARG_GRAMMAR_ID = "grammar_id";
 	
-	private long mGrammarId = -1;
 	private Grammar mGrammarInfo = null;
 	
 	private TextToSpeech mTTS;
 
+	private String[] mTypeArray = null;
 	/**
 	 * Mandatory empty constructor for the fragment manager to instantiate the
 	 * fragment (e.g. upon screen orientation changes).
@@ -51,6 +50,8 @@ public class GrammarDetailFragment extends Fragment implements OnInitListener {
 		super.onCreate(savedInstanceState);
 		
 		mTTS = new TextToSpeech(getActivity(), this);
+		
+		mTypeArray = getResources().getStringArray(R.array.arry_type);
 
 		if (getArguments().containsKey(ARG_GRAMMAR_ID)) {
 			// Load the dummy content specified by the fragment
@@ -81,7 +82,6 @@ public class GrammarDetailFragment extends Fragment implements OnInitListener {
 
 	private void loadGrammarInfo(long id) {
 		Log.d(TAG, "loadGrammarInfo id = " + id);
-		mGrammarId = id;
 		LoadGrammarInfoAyncTask loader = new LoadGrammarInfoAyncTask();
 		loader.execute(id);
 	}
@@ -108,7 +108,7 @@ public class GrammarDetailFragment extends Fragment implements OnInitListener {
 				
 				type = mean.mType;
 				isFirst = false;
-				sb.append(GrammarUtils.getGrammarTypeStringByType(type) + "\n");
+				sb.append(GrammarUtils.getTypeString(getActivity(), type) + "\n");
 				type = mean.mType;
 			}
 			sb.append("\t" + mean.mMeaning + "\n");			

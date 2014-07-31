@@ -3,7 +3,6 @@ package com.loyid.grammarbook;
 import com.loyid.grammarbook.GrammarUtils.Questions;
 
 import android.app.Activity;
-import android.net.Uri;
 import android.os.Bundle;
 import android.app.Fragment;
 import android.util.Log;

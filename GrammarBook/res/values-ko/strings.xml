@@ -51,5 +51,12 @@
     <string name="label_score">점수</string>
     <string name="label_corrrect">정답 개수</string>
     <string name="label_incorrect">오답 개수</string>
+    <string name="label_grammar_type_noun">명사</string>
+    <string name="label_grammar_type_verb">동사</string>
+    <string name="label_grammar_type_adjective">형용사</string>
+    <string name="label_grammar_type_adverb">부사</string>
+    <string name="label_grammar_type_preposition">전치사</string>
+    <string name="label_grammar_type_idiom">관용구</string>
+    <string name="type_unknown">알수없음</string>
     
 </resources>

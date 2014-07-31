@@ -1,15 +1,17 @@
 package com.loyid.grammarbook;
 
-import android.app.Activity;
+import java.util.ArrayList;
+import java.util.HashMap;
+
 import android.os.Bundle;
 import android.app.ListFragment;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.util.Log;
+import android.util.SparseArray;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.ResourceCursorAdapter;
 import android.widget.TextView;
@@ -80,14 +82,37 @@ public class GrammarListFragment extends ListFragment {
 			
 			String[] group = strMeaning.split("#");
 			StringBuilder sb = new StringBuilder();
+			SparseArray<ArrayList<String>> array = new SparseArray<ArrayList<String>>();
 			int size = group.length;
+			ArrayList<String> items;
 			for (int i = 0; i < size; i++) {
 				String[] means = group[i].split("%");
-				sb.append(means[1] + " - " + means[2]);
-				if (i != size-1) {
-					sb.append(", ");
+				int type = GrammarUtils.getGrammarTypeByString(means[1].toLowerCase());
+				
+				if (array.indexOfKey(type) >= 0) {
+					items = array.get(type);
+				} else {
+					items = new ArrayList<String>();
+					array.put(type, items);
 				}
-			} 
+				
+				items.add(means[2]);
+			}
+			
+			for (int j = 0; j < array.size(); j++) {
+				int type = array.keyAt(j);
+				items = array.get(type);
+				sb.append("-" + GrammarUtils.getTypeString(getActivity(), type) + " : ");
+				for (int k = 0; k < items.size(); k++) {
+					sb.append(items.get(k));
+					if (k < items.size() - 1)
+						sb.append(", ");
+				}
+				
+				if (j < array.size() - 1)
+					sb.append("   ");
+				
+			}
 			cache.meaning.setText(sb.toString());
 		}
 		

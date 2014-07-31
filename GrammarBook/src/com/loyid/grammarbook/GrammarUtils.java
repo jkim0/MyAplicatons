@@ -10,10 +10,8 @@ import java.util.HashMap;
 
 import android.content.ContentValues;
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
 import android.util.Log;
 
@@ -22,12 +20,12 @@ public class GrammarUtils {
 	
 	private static DatabaseHelper sDatabaseHelper = null;
 	
-	private static final int GRAMMAR_TYPE_NOUN = 0;
-	private static final int GRAMMAR_TYPE_VERB = 1;
-	private static final int GRAMMAR_TYPE_ADJECTIVE = 2;
-	private static final int GRAMMAR_TYPE_ADVERB = 3;
-	private static final int GRAMMAR_TYPE_PREPOSITION = 4;
-	private static final int GRAMMAR_TYPE_IDIOM = 5;
+	public static final int GRAMMAR_TYPE_NOUN = 0;
+	public static final int GRAMMAR_TYPE_VERB = 1;
+	public static final int GRAMMAR_TYPE_ADJECTIVE = 2;
+	public static final int GRAMMAR_TYPE_ADVERB = 3;
+	public static final int GRAMMAR_TYPE_PREPOSITION = 4;
+	public static final int GRAMMAR_TYPE_IDIOM = 5;
 	
 	private static final String STR_GRAMMAR_TYPE_NOUN = "noun";
 	private static final String STR_GRAMMAR_TYPE_VERB = "verb";
@@ -56,12 +54,23 @@ public class GrammarUtils {
 	
 	private static final HashMap<Integer, String> MAP_GRAMMAR_TYPE_TO_STRING = new HashMap<Integer, String> () { 
 		{
-			put(GRAMMAR_TYPE_NOUN, STR_GRAMMAR_TYPE_VERB);
-			put(GRAMMAR_TYPE_VERB, STR_GRAMMAR_TYPE_NOUN);
+			put(GRAMMAR_TYPE_NOUN, STR_GRAMMAR_TYPE_NOUN);
+			put(GRAMMAR_TYPE_VERB, STR_GRAMMAR_TYPE_VERB);
 			put(GRAMMAR_TYPE_ADJECTIVE, STR_GRAMMAR_TYPE_ADJECTIVE);
 			put(GRAMMAR_TYPE_ADVERB, STR_GRAMMAR_TYPE_ADVERB);
 			put(GRAMMAR_TYPE_PREPOSITION, STR_GRAMMAR_TYPE_PREPOSITION);
 			put(GRAMMAR_TYPE_IDIOM, STR_GRAMMAR_TYPE_IDIOM);
+		}
+	};
+	
+	private static final HashMap<String, Integer> MAP_GRAMMAR_STRING_TO_TYPE = new HashMap<String, Integer> () { 
+		{
+			put(STR_GRAMMAR_TYPE_NOUN, GRAMMAR_TYPE_NOUN);
+			put(STR_GRAMMAR_TYPE_VERB, GRAMMAR_TYPE_VERB);
+			put(STR_GRAMMAR_TYPE_ADJECTIVE, GRAMMAR_TYPE_ADJECTIVE);
+			put(STR_GRAMMAR_TYPE_ADVERB, GRAMMAR_TYPE_ADVERB);
+			put(STR_GRAMMAR_TYPE_PREPOSITION, GRAMMAR_TYPE_PREPOSITION);
+			put(STR_GRAMMAR_TYPE_IDIOM, GRAMMAR_TYPE_IDIOM);
 		}
 	};
 	
@@ -78,8 +87,8 @@ public class GrammarUtils {
 	
 	private static final HashMap<String, String> MAP_GRAMMAR_PREFIX_TO_STRING = new HashMap<String, String> () { 
 		{
-			put(PREFIX_GRAMMAR_TYPE_NOUN, STR_GRAMMAR_TYPE_VERB);
-			put(PREFIX_GRAMMAR_TYPE_VERB, STR_GRAMMAR_TYPE_NOUN);
+			put(PREFIX_GRAMMAR_TYPE_NOUN, STR_GRAMMAR_TYPE_NOUN);
+			put(PREFIX_GRAMMAR_TYPE_VERB, STR_GRAMMAR_TYPE_VERB);
 			put(PREFIX_GRAMMAR_TYPE_ADJECTIVE, STR_GRAMMAR_TYPE_ADJECTIVE);
 			put(PREFIX_GRAMMAR_TYPE_ADVERB, STR_GRAMMAR_TYPE_ADVERB);
 			put(PREFIX_GRAMMAR_TYPE_PREPOSITION, STR_GRAMMAR_TYPE_PREPOSITION);
@@ -465,15 +474,19 @@ public class GrammarUtils {
 	}
 	
 	public static int getGrammarTypeByPrefix(String prefix) {
-		return MAP_GRAMMAR_PREFIX_TO_TYPE.get(prefix);
+		return MAP_GRAMMAR_PREFIX_TO_TYPE.get(prefix.toLowerCase());
 	}
 	
 	public static String getGrammarTypeStringByPrefix(String prefix) {
-		return MAP_GRAMMAR_PREFIX_TO_STRING.get(prefix);
+		return MAP_GRAMMAR_PREFIX_TO_STRING.get(prefix.toLowerCase());
 	}
 	
 	public static String getGrammarTypeStringByType(int type) {
 		return MAP_GRAMMAR_TYPE_TO_STRING.get(type);
+	}
+	
+	public static int getGrammarTypeByString(String type) {
+		return MAP_GRAMMAR_STRING_TO_TYPE.get(type.toLowerCase());
 	}
 	
 	public static Grammar getGrammarInfo(Context context, long grammarId) {
@@ -830,4 +843,30 @@ public class GrammarUtils {
 		
 		return result;
 	}
+	
+	public static String getTypeString(Context context, int type) {
+		String typeStr = context.getString(R.string.type_unknown);
+		switch(type) {
+		case GrammarUtils.GRAMMAR_TYPE_NOUN:
+			typeStr = context.getString(R.string.label_grammar_type_noun);
+			break;
+		case GrammarUtils.GRAMMAR_TYPE_VERB:
+			typeStr = context.getString(R.string.label_grammar_type_verb);
+			break;
+		case GrammarUtils.GRAMMAR_TYPE_ADJECTIVE:
+			typeStr = context.getString(R.string.label_grammar_type_adjective);
+			break;
+		case GrammarUtils.GRAMMAR_TYPE_ADVERB:
+			typeStr = context.getString(R.string.label_grammar_type_adverb);
+			break;
+		case GrammarUtils.GRAMMAR_TYPE_PREPOSITION:
+			typeStr = context.getString(R.string.label_grammar_type_preposition);
+			break;
+		case GrammarUtils.GRAMMAR_TYPE_IDIOM:
+			typeStr = context.getString(R.string.label_grammar_type_idiom);
+			break;
+		}
+		return typeStr;
+	}
+	
 }
