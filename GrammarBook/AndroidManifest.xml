@@ -66,7 +66,7 @@
         </activity>
         <activity
             android:name=".GrammarDetailActivity"
-            android:label="@string/title_item_detail"
+            android:label="@string/title_activity_grammar_detail"
             android:parentActivityName=".GrammarListActivity" android:configChanges="orientation|screenSize">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"

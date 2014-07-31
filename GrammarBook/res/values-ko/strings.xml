@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    
+    <string name="app_name">단어장</string>
+    <string name="action_se가ttings">설정</string>
+    <string name="add_grammar">단어 추가</string>
+    <string name="my_grammar_list">내 단어 목록</string>
+    <string name="test">테스트</string>
+    <string name="setting">설정</string>
+    <string name="title_activity_edit_grammar">단어 편집</string>
+    <string name="title_activity_grammar_list">단어 목록</string>
+    <string name="title_activity_grammar_test">테스트</string>
+    <string name="title_activity_settings">설정</string>    
+    <string name="title_activity_grammar_detail">단어 세부 정보</string>
+    <string name="label_grammar">단어</string>
+    <string name="label_meaning">의미</string>
+    <string name="lebel_type">종류</string>
+    <string name="hint_label_grammar">단어 입력</string>
+    <string name="hint_label_meanning">단의 의미 입력</string>
+    <string name="btn_label_add">추가</string>
+    <string name="btn_label_remove">제거</string>
+    <string name="action_done">완료</string>
+    <string name="btn_label_minus">-</string>
+    <string name="btn_label_check">검사</string>
+    <string name="btn_label_play">재생</string>
+    <string name="msg_init_tts_success">TTS 초기화 성공</string>
+    <string name="msg_init_tts_fail">TTS 초기화 실패</string>
+    <string name="pref_label_load_data">파일에서 목록 읽어 들이기(*.txt)</string>
+    <string name="pref_label_reset">초기화</string>
+    <string name="pref_header_label_general">일반</string>
+    <string name="pref_label_max_meaning_count">최대 의미 개수</string>
+    <string name="pref_header_label_grammar_edit">단어 편집 설정</string>
+    <string name="pref_label_test_count">테스트 수</string>
+    <string name="pref_label_test_example_count">객관식 보기 개수</string>
+    <string name="pref_header_label_test">테스트 설정</string>
+    <string name="title_activity_grammar_preference">설정</string>
+    <string name="msg_meaning_row_full">더 이상 추가 할 수 없습니다.</string>
+    <string name="msg_load_data_done">단어 목록 읽어 들이기가 완료되었습니다.</string>
+    <string name="msg_progress_loading_data">파일에서 목록 읽어들이는 중입니다.</string>
+    <string name="msg_no_grammar_in_edit">단어를 입력해 주세요.</string>
+    <string name="btn_label_ok">확인</string>
+    <string name="type_label_test_objective">객관식</string>
+    <string name="type_label_test_subjective">주관식</string>
+    <string name="btn_label_cancel">취소</string>
+    <string name="btn_label_start">시작</string>
+    <string name="type_label_question_meaning">의미 맞추기</string>
+    <string name="type_label_question_grammar">단어 맞추기</string>
+    <string name="radio_group_label_type_test">테스트 종류</string>
+    <string name="radio_group_label_type_question">문제 종류</string>
+    <string name="btn_label_completed">완료</string>
+    <string name="label_score">점수</string>
+    <string name="label_corrrect">정답 개수</string>
+    <string name="label_incorrect">오답 개수</string>
+    
+</resources>
