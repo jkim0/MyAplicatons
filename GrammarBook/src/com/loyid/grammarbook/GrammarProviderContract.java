@@ -1,17 +1,75 @@
 package com.loyid.grammarbook;
 
+import android.database.DatabaseUtils;
 import android.net.Uri;
 import android.provider.BaseColumns;
 
 public final class GrammarProviderContract {
-	public static final String AUTHORITY = "com.loyid.grammarprovider";
+	public static final String AUTHORITY = "com.loyid.grammarbook.provider";
 	
-	private GrammarProviderContract() {
-	}
+	private GrammarProviderContract() {}
 	
-	public static final class Meanings implements BaseColumns {
-		public static final String TABLE_NAME = "meanings";
+	public static final String UNKNOWN_STRING = "<unknown>";
+	
+	public static String keyFor(String name) {
+		if (name != null)  {
+			boolean sortfirst = false;
+			if (name.equals(UNKNOWN_STRING)) {
+				return "\001";
+			}
+			
+			// Check if the first character is \001. We use this to
+			// force sorting of certain special files, like the silent ringtone.
+			if (name.startsWith("\001")) {
+				sortfirst = true;
+			}
+			
+			name = name.trim().toLowerCase();
+			if (name.startsWith("the ")) {
+				name = name.substring(4);
+			}
+			
+			if (name.startsWith("an ")) {
+				name = name.substring(3);
+			}
+			
+			if (name.startsWith("a ")) {
+				name = name.substring(2);
+			}
+			
+			if (name.endsWith(", the") || name.endsWith(",the") ||
+					name.endsWith(", an") || name.endsWith(",an") ||
+					name.endsWith(", a") || name.endsWith(",a")) {
+				name = name.substring(0, name.lastIndexOf(','));
+			}
+			
+			name = name.replaceAll("[\\[\\]\\(\\)\"'.,?!]", "").trim();
+			if (name.length() > 0) {
+				// Insert a separator between the characters to avoid
+				// matches on a partial character. If we ever change
+				// to start-of-word-only matches, this can be removed.
+				StringBuilder b = new StringBuilder();
+				b.append('.');
+				int nl = name.length();
+				for (int i = 0; i < nl; i++) {
+					b.append(name.charAt(i));
+					b.append('.');
+				}
+				
+				name = b.toString();
+				String key = DatabaseUtils.getCollationKey(name);
+				if (sortfirst) {
+					key = "\001" + key;
+				}
+				return key;
+			} else {
+				return "";
+			}
+		}
 		
+		return null;
+	}
+	public static class GBaseColumns implements BaseColumns {
 		/*
 		 * URI definitions
 		 */
@@ -19,7 +77,11 @@ public final class GrammarProviderContract {
 		/**
 		 * The table name offered by this provider
 		 */
-		private static final String SCHEME = "content://";
+		public static final String SCHEME = "content://";
+	}
+	
+	public static final class Meanings extends GBaseColumns {
+		public static final String TABLE_NAME = "meanings";		
 		
 		/*
 		 * Path parts for the URIs
@@ -56,6 +118,10 @@ public final class GrammarProviderContract {
 		 */
 		public static final Uri CONTENT_MEANING_ID_URI_PATTERN = Uri.parse(SCHEME + AUTHORITY + PATH_MEANING_ID + "/#");
 		
+		public static final String CONTENT_TYPE = "vnd.android.cursor.dir/com.loyid.grammarbook.provider.meanings";
+		
+		public static final String CONTENT_ITEM_TYPE = "vnd.android.cursor.item/com.loyid.grammarbook.provider.meanings";
+		
 		public static final String COLUMN_NAME_WORD = "word";
 		
 		public static final String COLUMN_NAME_TYPE = "type";
@@ -80,17 +146,12 @@ public final class GrammarProviderContract {
 		public static final String DEFAULT_SORT_ORDER = COLUMN_NAME_TYPE + " ASC"; //ASC or DESC
 	}
 	
-	public static final class Mappings implements BaseColumns {
+	public static final class Mappings extends GBaseColumns {
 		public static final String TABLE_NAME = "mappings";
 		
 		/*
 		 * URI definitions
 		 */
-		
-		/**
-		 * The table name offered by this provider
-		 */
-		private static final String SCHEME = "content://";
 		
 		/*
 		 * Path parts for the URIs
@@ -127,6 +188,10 @@ public final class GrammarProviderContract {
 		 */
 		public static final Uri CONTENT_MAPPING_ID_URI_PATTERN = Uri.parse(SCHEME + AUTHORITY + PATH_MAPPING_ID + "/#");
 		
+		public static final String CONTENT_TYPE = "vnd.android.cursor.dir/com.loyid.grammarbook.provider.mappings";
+		
+		public static final String CONTENT_ITEM_TYPE = "vnd.android.cursor.item/com.loyid.grammarbook.provider.mappings";
+		
 		public static final String COLUMN_NAME_GRAMMAR_ID = "grammar_id";
 		
 		public static final String COLUMN_NAME_MEANING_ID = "meaing_id";
@@ -137,7 +202,7 @@ public final class GrammarProviderContract {
 		public static final String DEFAULT_SORT_ORDER = COLUMN_NAME_GRAMMAR_ID + " ASC"; //ASC or DESC
 	}
 	
-	public static final class Grammars implements BaseColumns {
+	public static final class Grammars extends GBaseColumns {
 		/**
         * The table name offered by this provider
          */
@@ -146,10 +211,6 @@ public final class GrammarProviderContract {
 		/*
         * URI definitions
          */
-		/**
-        * The table name offered by this provider
-         */
-		private static final String SCHEME = "content://";
 		
 		/*
         * Path parts for the URIs
@@ -185,6 +246,10 @@ public final class GrammarProviderContract {
         * incoming URIs or to construct an Intent.
          */
 		public static final Uri CONTENT_GRAMMAR_ID_URI_PATTERN = Uri.parse(SCHEME + AUTHORITY + PATH_GRAMMAR_ID + "/#");
+		
+		public static final String CONTENT_TYPE = "vnd.android.cursor.dir/com.loyid.grammarbook.provider.grammars";
+		
+		public static final String CONTENT_ITEM_TYPE = "vnd.android.cursor.item/com.loyid.grammarbook.provider.grammars";
 		
 		/*
         * Column definitions

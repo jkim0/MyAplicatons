@@ -10,6 +10,9 @@ import android.speech.tts.TextToSpeech;
 import android.speech.tts.TextToSpeech.OnInitListener;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
@@ -34,6 +37,7 @@ public class GrammarDetailFragment extends Fragment implements OnInitListener {
 	public static final String ARG_GRAMMAR_ID = "grammar_id";
 	
 	private Grammar mGrammarInfo = null;
+	private long mGrammarId = -1;
 	
 	private TextToSpeech mTTS;
 	
@@ -47,6 +51,7 @@ public class GrammarDetailFragment extends Fragment implements OnInitListener {
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		setHasOptionsMenu(true);
 		
 		mTTS = new TextToSpeech(getActivity(), this);
 	
@@ -58,6 +63,42 @@ public class GrammarDetailFragment extends Fragment implements OnInitListener {
 		}
 	}
 	
+	@Override
+	public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+		// TODO Auto-generated method stub
+		inflater.inflate(R.menu.grammar_detail, menu);
+		super.onCreateOptionsMenu(menu, inflater);
+	}
+
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		// TODO Auto-generated method stub		
+		int id = item.getItemId();
+		if (id == R.id.action_edit) {
+			editCurrentGrammar();
+		} else if (id == R.id.action_delete) {
+			deleteCurrentGrammar();
+		}
+		
+		return super.onOptionsItemSelected(item);
+	}
+	
+	private void deleteCurrentGrammar() {
+		boolean result = GrammarUtils.deleteGrammar(getActivity(), mGrammarId);
+		Log.d(TAG, "deleteCurrentGrammar result = " + result);
+		getActivity().finish();
+	}
+	
+	private void editCurrentGrammar() {
+		
+	}
+
+	@Override
+	public void onPrepareOptionsMenu(Menu menu) {
+		// TODO Auto-generated method stub
+		super.onPrepareOptionsMenu(menu);
+	}
+
 	@Override
 	public void onAttach(Activity activity) {
 		super.onAttach(activity);
@@ -79,6 +120,7 @@ public class GrammarDetailFragment extends Fragment implements OnInitListener {
 
 	private void loadGrammarInfo(long id) {
 		Log.d(TAG, "loadGrammarInfo id = " + id);
+		mGrammarId = id;
 		LoadGrammarInfoAyncTask loader = new LoadGrammarInfoAyncTask();
 		loader.execute(id);
 	}

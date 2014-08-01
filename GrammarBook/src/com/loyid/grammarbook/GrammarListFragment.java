@@ -80,6 +80,7 @@ public class GrammarListFragment extends ListFragment {
 			cache.grammar.setText(grammar);
 			String strMeaning = cursor.getString(cache.meaningColumnIndex);
 			
+			Log.d(TAG, "strMeaning = " + strMeaning);
 			String[] group = strMeaning.split("#");
 			StringBuilder sb = new StringBuilder();
 			SparseArray<ArrayList<String>> array = new SparseArray<ArrayList<String>>();
@@ -87,7 +88,13 @@ public class GrammarListFragment extends ListFragment {
 			ArrayList<String> items;
 			for (int i = 0; i < size; i++) {
 				String[] means = group[i].split("%");
-				int type = GrammarUtils.getGrammarTypeByString(means[1].toLowerCase());
+				int type = Integer.valueOf(means[0]);
+				String mean;
+				if (means.length > 2) {
+					mean = means[2];
+				} else {
+					mean = means[1];
+				}
 				
 				if (array.indexOfKey(type) >= 0) {
 					items = array.get(type);
@@ -96,7 +103,7 @@ public class GrammarListFragment extends ListFragment {
 					array.put(type, items);
 				}
 				
-				items.add(means[2]);
+				items.add(mean);
 			}
 			
 			for (int j = 0; j < array.size(); j++) {
@@ -151,20 +158,14 @@ public class GrammarListFragment extends ListFragment {
 	}
 	
 	private void loadGrammarList() {
-		SQLiteDatabase db = mDatabaseHelper.getReadableDatabase();
 		String[] projection = {
 				GrammarProviderContract.Grammars._ID,
 				GrammarProviderContract.Grammars.COLUMN_NAME_GRAMMAR,
 				GrammarProviderContract.Grammars.COLUMN_NAME_MEANING
 		};
 		
-		Cursor cursor = db.query(GrammarProviderContract.Grammars.TABLE_NAME,
-				projection,
-				null,
-				null,
-				null,
-				null,
-				GrammarProviderContract.Grammars.DEFAULT_SORT_ORDER);
+		Cursor cursor = getActivity().getContentResolver().query(GrammarProviderContract.Grammars.CONTENT_URI,
+				projection, null, null, GrammarProviderContract.Grammars.DEFAULT_SORT_ORDER);
 		
 		if (cursor != null) {
 			Log.e(TAG, "loadGrammarList cursor count = " + cursor.getCount());

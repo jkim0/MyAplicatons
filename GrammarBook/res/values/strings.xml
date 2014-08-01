@@ -58,5 +58,7 @@
     <string name="label_grammar_type_preposition">Preposition</string>
     <string name="label_grammar_type_idiom">Idiom</string>
     <string name="type_unknown">Unknown</string>
+    <string name="action_delete">Delete</string>
+    <string name="action_edit">Edit</string>
 
 </resources>

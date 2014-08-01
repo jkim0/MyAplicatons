@@ -28,7 +28,7 @@ public class DatabaseHelper extends SQLiteOpenHelper
 		// TODO Auto-generated method stub
 		db.execSQL("CREATE TABLE " + GrammarProviderContract.Grammars.TABLE_NAME + " ("
 				+ GrammarProviderContract.Grammars._ID + " INTEGER PRIMARY KEY,"
-				+ GrammarProviderContract.Grammars.COLUMN_NAME_GRAMMAR + " TEXT,"
+				+ GrammarProviderContract.Grammars.COLUMN_NAME_GRAMMAR + " TEXT NOT NULL,"
 				+ GrammarProviderContract.Grammars.COLUMN_NAME_MEANING + " TEXT,"
 				+ GrammarProviderContract.Grammars.COLUMN_NAME_CREATED_DATE + " INTEGER,"
 				+ GrammarProviderContract.Grammars.COLUMN_NAME_MODIFIED_DATE + " INTEGER"
@@ -36,7 +36,7 @@ public class DatabaseHelper extends SQLiteOpenHelper
 		
 		db.execSQL("CREATE TABLE " + GrammarProviderContract.Meanings.TABLE_NAME + " ("
 				+ GrammarProviderContract.Meanings._ID + " INTEGER PRIMARY KEY,"
-				+ GrammarProviderContract.Meanings.COLUMN_NAME_WORD + " TEXT,"
+				+ GrammarProviderContract.Meanings.COLUMN_NAME_WORD + " TEXT NOT NULL,"
 				+ GrammarProviderContract.Meanings.COLUMN_NAME_TYPE + " TEXT,"
 				+ GrammarProviderContract.Meanings.COLUMN_NAME_CREATED_DATE + " INTEGER,"
 				+ GrammarProviderContract.Meanings.COLUMN_NAME_MODIFIED_DATE + " INTEGER,"
@@ -65,6 +65,13 @@ public class DatabaseHelper extends SQLiteOpenHelper
 					+ "SET refer_count = refer_count + 1 "
 					+ "WHERE _id = new." + GrammarProviderContract.Mappings.COLUMN_NAME_MEANING_ID + ";"
 				+ "END");
+		
+		db.execSQL("CREATE TRIGGER IF NOT EXISTS update_mapping_after_delete AFTER DELETE on "
+				+ GrammarProviderContract.Grammars.TABLE_NAME + " "
+				+ "BEGIN "
+					+ "DELETE from " + GrammarProviderContract.Mappings.TABLE_NAME
+					+ " WHERE grammar_id = old." + GrammarProviderContract.Grammars._ID + ";"
+				+ "END");
 	}
 
 	@Override
@@ -80,6 +87,7 @@ public class DatabaseHelper extends SQLiteOpenHelper
 		db.execSQL("DROP TABLE IF EXISTS " + GrammarProviderContract.Mappings.TABLE_NAME);
 		db.execSQL("DROP TABLE IF EXISTS decrease_meaning_refer_mount");
 		db.execSQL("DROP TABLE IF EXISTS increase_meaning_refer_mount");
+		db.execSQL("DROP TABLE IF EXISTS update_mapping_after_delete");
 		
 		// Recreates the database with a new version
 		onCreate(db);

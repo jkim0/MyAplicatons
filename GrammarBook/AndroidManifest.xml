@@ -66,12 +66,20 @@
         </activity>
         <activity
             android:name=".GrammarDetailActivity"
+            android:configChanges="orientation|screenSize"
             android:label="@string/title_activity_grammar_detail"
-            android:parentActivityName=".GrammarListActivity" android:configChanges="orientation|screenSize">
+            android:parentActivityName=".GrammarListActivity" >
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.loyid.grammarbook.ItemListActivity" />
         </activity>
+
+        <provider
+            android:name=".GrammarContentProvider"
+            android:authorities="com.loyid.grammarbook.provider"
+            android:enabled="true"
+            android:exported="false" >
+        </provider>
     </application>
 
 </manifest>

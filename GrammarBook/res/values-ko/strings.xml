@@ -58,5 +58,7 @@
     <string name="label_grammar_type_preposition">전치사</string>
     <string name="label_grammar_type_idiom">관용구</string>
     <string name="type_unknown">알수없음</string>
+    <string name="action_delete">삭제</string>
+    <string name="action_edit">수정</string>
     
 </resources>

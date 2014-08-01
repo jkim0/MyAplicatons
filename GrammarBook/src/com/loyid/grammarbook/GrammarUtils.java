@@ -41,6 +41,9 @@ public class GrammarUtils {
 	private static final String PREFIX_GRAMMAR_TYPE_PREPOSITION = "!";
 	private static final String PREFIX_GRAMMAR_TYPE_IDIOM = "*";
 	
+	public static final String IDENTIFIER_MEANING_GROUP = "#";
+	public static final String IDENTIFIER_MEANING = "%";
+	
 	public static final int TYPE_TEST_OBJECTIVE = 0;
 	public static final int TYPE_TEST_SUBJECTIVE = 1;
 	
@@ -258,18 +261,12 @@ public class GrammarUtils {
 	public static long getGrammarId(Context context, String strGrammar) {
 		long grammarId = -1;
 		
-		DatabaseHelper dbHelper = getDatabaseHelper(context);
+		String[] projection = { GrammarProviderContract.Grammars._ID };
 		String selection = GrammarProviderContract.Grammars.COLUMN_NAME_GRAMMAR + " = ?";		
 		String[] selectionArgs = { strGrammar };
 		
-		SQLiteDatabase db = dbHelper.getReadableDatabase();
-		Cursor cursor = db.query(GrammarProviderContract.Grammars.TABLE_NAME, 
-				null,
-				selection,
-				selectionArgs,
-				null,
-				null,
-				GrammarProviderContract.Grammars.DEFAULT_SORT_ORDER);
+		Cursor cursor = context.getContentResolver().query(GrammarProviderContract.Grammars.CONTENT_URI,
+				projection, selection, selectionArgs, GrammarProviderContract.Grammars.DEFAULT_SORT_ORDER);
 		
 		if (cursor != null) {
 			if (cursor.moveToFirst()) {
@@ -295,9 +292,6 @@ public class GrammarUtils {
 		
 		long grammarId = getGrammarId(context, strGrammar);
 		
-		Long now = Long.valueOf(System.currentTimeMillis());
-		
-		StringBuilder sb = null;
 		ArrayList<Meaning> meanings = grammar.mMeanings;
 		int count = meanings.size();
 		
@@ -306,101 +300,23 @@ public class GrammarUtils {
 			return false;
 		}
 		
-		if (grammarId < 0 && count > 0) {
-			ContentValues values = new ContentValues();
-			values.put(GrammarProviderContract.Grammars.COLUMN_NAME_GRAMMAR, strGrammar);
-			values.put(GrammarProviderContract.Grammars.COLUMN_NAME_CREATED_DATE, now);
-			values.put(GrammarProviderContract.Grammars.COLUMN_NAME_MODIFIED_DATE, now);
-			
-			grammarId = db.insert(GrammarProviderContract.Grammars.TABLE_NAME, null, values);
-		}
-		
-		String whereClause = GrammarProviderContract.Mappings.COLUMN_NAME_GRAMMAR_ID + " = ?";
-		String[] whereArgs = { String.valueOf(grammarId) };
-		int result = db.delete(GrammarProviderContract.Mappings.TABLE_NAME, whereClause, whereArgs);
-		Log.d(TAG, "remove " + result + " items from Mappings table");
-		
+		ContentValues values = new ContentValues();
+		values.put(GrammarProviderContract.Grammars.COLUMN_NAME_GRAMMAR, strGrammar);
+		String meaningStr = "";
 		for (int i = 0; i < count; i++) {
-			Meaning meaning = meanings.get(i);
-			int type = meaning.mType;
-			String typeStr = meaning.mTypeStr.trim();
-			String strMeaning = meaning.mMeaning.trim();
-			
-			if (strMeaning != null && strMeaning.length() > 0) {
-				ContentValues values = new ContentValues();
-				values.put(GrammarProviderContract.Meanings.COLUMN_NAME_WORD, strMeaning);
-				values.put(GrammarProviderContract.Meanings.COLUMN_NAME_TYPE, type);
-
-				String selection = GrammarProviderContract.Meanings.COLUMN_NAME_WORD + " = ?"
-						+ " AND " + GrammarProviderContract.Meanings.COLUMN_NAME_TYPE + " = ?";
-
-				String[] selectionArgs = new String[] { strMeaning, String.valueOf(type) };
-				
-				Cursor cursor = db.query(GrammarProviderContract.Meanings.TABLE_NAME, 
-						null,
-						selection,
-						selectionArgs,
-						null,
-						null,
-						GrammarProviderContract.Meanings.DEFAULT_SORT_ORDER);
-
-				long meaningId = -1;
-				if (cursor != null) {
-					if (cursor.getCount() > 0 && cursor.moveToFirst()) {
-						int index = cursor.getColumnIndex(GrammarProviderContract.Meanings._ID);
-						meaningId = cursor.getLong(index);
-					}
-					
-					cursor.close();
-				}
-
-				if (meaningId < 0) {
-					Log.d(TAG, "insert meaning");
-					values.put(GrammarProviderContract.Meanings.COLUMN_NAME_CREATED_DATE, now);
-					values.put(GrammarProviderContract.Meanings.COLUMN_NAME_MODIFIED_DATE, now);
-					meaningId = db.insert(GrammarProviderContract.Meanings.TABLE_NAME, null, values);
-				} else {
-					Log.d(TAG, "update meaning index = " + meaningId);
-					whereClause = GrammarProviderContract.Meanings._ID + " = ?";
-					whereArgs = new String[] { String.valueOf(meaningId) };
-					values.put(GrammarProviderContract.Meanings.COLUMN_NAME_MODIFIED_DATE, now);
-					db.update(GrammarProviderContract.Meanings.TABLE_NAME, values, whereClause, whereArgs);
-				}
-				
-				values = new ContentValues();
-				values.put(GrammarProviderContract.Mappings.COLUMN_NAME_GRAMMAR_ID, grammarId);
-				values.put(GrammarProviderContract.Mappings.COLUMN_NAME_MEANING_ID, meaningId);
-				db.insert(GrammarProviderContract.Mappings.TABLE_NAME, null, values);
-				
-				if (sb == null)
-					sb = new StringBuilder();
-				sb.append(type);
-				sb.append("%" + typeStr);
-				sb.append("%" + strMeaning);
-				
-				if (i != count - 1) {
-					sb.append("#");
-				}
-			}
-		
+			Meaning m = meanings.get(i);
+			meaningStr += m.mType + "%" + m.mMeaning;
+			if (i < count - 1) {
+				meaningStr += "#";
+			}			
 		}
-		
-		if (sb != null) {
-			String strMeaning = sb.toString();
-			Log.d(TAG, "############# saveGrammar Grammar = " + strGrammar + " meaning = " + strMeaning);
-			
-			ContentValues values = new ContentValues();
-			values.put(GrammarProviderContract.Grammars.COLUMN_NAME_MEANING, strMeaning);
-			values.put(GrammarProviderContract.Grammars.COLUMN_NAME_MODIFIED_DATE, now);
-			
-			Log.d(TAG, "update grammar index = " + grammarId);
-			whereClause = GrammarProviderContract.Grammars._ID + " = ?";
-			whereArgs = new String[] { String.valueOf(grammarId) };
-				
-			db.update(GrammarProviderContract.Grammars.TABLE_NAME, values, whereClause, whereArgs);			
+		values.put(GrammarProviderContract.Grammars.COLUMN_NAME_MEANING, meaningStr);
+		if (grammarId < 0 && count > 0) {			
+			context.getContentResolver().insert(GrammarProviderContract.Grammars.CONTENT_URI, values);
 		} else {
-			Log.d(TAG, "failed to save Grammar data because there is no meanings");
-			return false;
+			context.getContentResolver().update(
+					Uri.withAppendedPath(GrammarProviderContract.Grammars.CONTENT_GRAMMAR_ID_URI_BASE, "" + grammarId),
+					values, null, null);
 		}
 		
 		if (doneCallback != null)
@@ -502,69 +418,42 @@ public class GrammarUtils {
 		String[] selectionArgs = { String.valueOf(grammarId) };
 		
 		String[] projection = {
-				GrammarProviderContract.Grammars.COLUMN_NAME_GRAMMAR
+				GrammarProviderContract.Grammars.COLUMN_NAME_GRAMMAR,
+				GrammarProviderContract.Grammars.COLUMN_NAME_MEANING
 		};
 		
 		SQLiteDatabase db = dbHelper.getReadableDatabase();
-		Cursor cursor = db.query(GrammarProviderContract.Grammars.TABLE_NAME, 
-				projection,
-				selection,
-				selectionArgs,
-				null,
-				null,
-				GrammarProviderContract.Grammars.DEFAULT_SORT_ORDER);
+		Cursor cursor = context.getContentResolver().query(GrammarProviderContract.Grammars.CONTENT_URI,
+				projection, selection, selectionArgs, GrammarProviderContract.Grammars.DEFAULT_SORT_ORDER);
 		
 		if (cursor != null) {
 			if (cursor.moveToFirst()) {
-				int columnIndex = cursor.getColumnIndex(GrammarProviderContract.Grammars.COLUMN_NAME_GRAMMAR);
-				grammarInfo.mGrammar = cursor.getString(columnIndex);
+				int grammarColumnIndex = cursor.getColumnIndex(GrammarProviderContract.Grammars.COLUMN_NAME_GRAMMAR);
+				int meaningColumnIndex = cursor.getColumnIndex(GrammarProviderContract.Grammars.COLUMN_NAME_MEANING);
+				grammarInfo.mGrammar = cursor.getString(grammarColumnIndex);
+				String meanings = cursor.getString(meaningColumnIndex);
+				String[] meaningGroup = meanings.split(GrammarUtils.IDENTIFIER_MEANING_GROUP);
+				for (int i = 0; i < meaningGroup.length; i++) {
+					String[] splits = meaningGroup[i].split(GrammarUtils.IDENTIFIER_MEANING);
+					int type;
+					String typeStr;
+					String mean;
+					if (splits.length > 2) {
+						type = Integer.valueOf(splits[0]);
+						typeStr = splits[1];
+						mean = splits[2];
+					} else {
+						type = Integer.valueOf(splits[0]);
+						typeStr = GrammarUtils.getGrammarTypeStringByType(type);
+						mean = splits[1];
+					}
+					grammarInfo.addMeaing(type, typeStr, mean);
+				}
 			}
 			
 			cursor.close();
 		}
-		
-		if (grammarInfo.mGrammar == null) {
-			Log.e(TAG, "failed to getGrammarInfo because there is no grammar that matched given id = " + grammarId);
-			return null;
-		}
-		
-		projection = new String[] {
-				GrammarProviderContract.Meanings._ID,
-				GrammarProviderContract.Meanings.COLUMN_NAME_TYPE,
-				GrammarProviderContract.Meanings.COLUMN_NAME_WORD
-		};
-
-		selection = GrammarProviderContract.Meanings._ID + " IN ("
-				+ "SELECT " + GrammarProviderContract.Mappings.COLUMN_NAME_MEANING_ID
-				+ " FROM " + GrammarProviderContract.Mappings.TABLE_NAME
-				+ " WHERE " + GrammarProviderContract.Mappings.COLUMN_NAME_GRAMMAR_ID + " = ?)";
-		selectionArgs = new String[] { String.valueOf(grammarId) };
-
-		cursor = db.query(GrammarProviderContract.Meanings.TABLE_NAME, 
-				projection,
-				selection,
-				selectionArgs,
-				null,
-				null,
-				GrammarProviderContract.Meanings.DEFAULT_SORT_ORDER);
-
-		if (cursor != null) {
-			Log.e(TAG, "getChildrenCursor count = " + cursor.getCount());
-			if (cursor.moveToFirst()) {
-				int typeColumnIndex = cursor.getColumnIndex(GrammarProviderContract.Meanings.COLUMN_NAME_TYPE);
-				int wordColumnIndex = cursor.getColumnIndex(GrammarProviderContract.Meanings.COLUMN_NAME_WORD);
-				for (int i = 0; i < cursor.getCount(); i++) {
-					int type = cursor.getInt(typeColumnIndex);
-					String meaning = cursor.getString(wordColumnIndex);
-					String typeStr = GrammarUtils.getGrammarTypeStringByType(type);
-					grammarInfo.addMeaing(type, typeStr, meaning);
-					cursor.moveToNext();
-				}				
-			}
-			
-			cursor.close();
-		}
-		
+				
 		return grammarInfo;
 	}
 	
@@ -869,4 +758,22 @@ public class GrammarUtils {
 		return typeStr;
 	}
 	
+	public static boolean deleteGrammar(Context context, long grammarId) {
+		Log.d(TAG, "deleteGrammar id = " + grammarId);
+		DatabaseHelper dbHelper = getDatabaseHelper(context);
+		
+		if (grammarId < 0) {
+			Log.e(TAG, "failed to deleteGrammar id = " + grammarId);
+			return false;
+		}
+		
+		SQLiteDatabase db = dbHelper.getWritableDatabase();
+		
+		String whereClause = GrammarProviderContract.Grammars._ID + " = ?";
+		String[] whereArgs = { String.valueOf(grammarId) };
+		
+		int count = db.delete(GrammarProviderContract.Grammars.TABLE_NAME, whereClause, whereArgs);
+		
+		return count > 0 ? true : false;
+	}
 }
