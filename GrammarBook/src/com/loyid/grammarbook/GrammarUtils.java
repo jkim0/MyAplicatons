@@ -287,9 +287,6 @@ public class GrammarUtils {
 			return false;
 		}
 		
-		DatabaseHelper dbHelper = getDatabaseHelper(context);
-		SQLiteDatabase db = dbHelper.getWritableDatabase();
-		
 		long grammarId = getGrammarId(context, strGrammar);
 		
 		ArrayList<Meaning> meanings = grammar.mMeanings;
@@ -412,7 +409,6 @@ public class GrammarUtils {
 		}
 		
 		Grammar grammarInfo = new Grammar();
-		DatabaseHelper dbHelper = getDatabaseHelper(context);
 		
 		String selection = GrammarProviderContract.Grammars._ID + " = ?";		
 		String[] selectionArgs = { String.valueOf(grammarId) };
@@ -422,7 +418,6 @@ public class GrammarUtils {
 				GrammarProviderContract.Grammars.COLUMN_NAME_MEANING
 		};
 		
-		SQLiteDatabase db = dbHelper.getReadableDatabase();
 		Cursor cursor = context.getContentResolver().query(GrammarProviderContract.Grammars.CONTENT_URI,
 				projection, selection, selectionArgs, GrammarProviderContract.Grammars.DEFAULT_SORT_ORDER);
 		
@@ -461,29 +456,24 @@ public class GrammarUtils {
 			int questionCount, int exampleCount, int answerCount) {
 		Log.e(TAG, "generateTestSource testType = " + testType + " questionType = " + questionType + " questionCount = " + questionCount
 				+ " exampleCount = " + exampleCount + " answerCount = " + answerCount);
-		DatabaseHelper dbHelper = getDatabaseHelper(context);
 		
 		if (testType < 0 || testType == 0 && questionType < 0) {
 			Log.e(TAG, "failed to generateTestSource testType = " + testType + " questionType = " + questionType);
 			return null;
 		}
 		
-		String tableName = null;
+		Uri uri = null;
 		String[] projections = null;
 		String subjectColumnName = null;
 		String indexColumnName = null;
 		String typeColumnName = GrammarProviderContract.Meanings.COLUMN_NAME_TYPE;
-		String exampleTableName = null;
-		String[] exampleProjections = null;
-		boolean needExample = true;
 				
 		if (testType == TYPE_TEST_SUBJECTIVE) {
 			questionType = TYPE_QUESTION_GRAMMAR;
-			needExample = false;
 		}
 		
 		if (questionType == TYPE_QUESTION_MEANING) {
-			tableName = GrammarProviderContract.Grammars.TABLE_NAME;
+			uri = GrammarProviderContract.Grammars.CONTENT_URI;
 			subjectColumnName = GrammarProviderContract.Grammars.COLUMN_NAME_GRAMMAR;
 			indexColumnName = GrammarProviderContract.Grammars._ID;
 			projections = new String[] {
@@ -491,7 +481,7 @@ public class GrammarUtils {
 					GrammarProviderContract.Grammars.COLUMN_NAME_GRAMMAR
 			};
 		} else if (questionType == TYPE_QUESTION_GRAMMAR) {
-			tableName = GrammarProviderContract.Meanings.TABLE_NAME;
+			uri = GrammarProviderContract.Meanings.CONTENT_URI;
 			subjectColumnName = GrammarProviderContract.Meanings.COLUMN_NAME_WORD;
 			indexColumnName = GrammarProviderContract.Meanings._ID;
 			projections = new String[] {
@@ -503,17 +493,9 @@ public class GrammarUtils {
 			Log.e(TAG, "failed to generateTestSource testType = " + testType + " questionType = " + questionType);
 			return null;
 		}
-		
-		SQLiteDatabase db = dbHelper.getReadableDatabase();
-		
-		Cursor cursor = db.query(tableName, 
-				projections,
-				null,
-				null,
-				null,
-				null,
-				"RANDOM()",
-				String.valueOf(questionCount));
+				
+		uri = uri.buildUpon().appendQueryParameter("limit", "" + questionCount).build();
+		Cursor cursor = context.getContentResolver().query(uri, projections, null, null, "RANDOM()");
 		
 		boolean generateSuccess = true;
 		Questions questions = new Questions();
@@ -525,6 +507,7 @@ public class GrammarUtils {
 		
 		if (cursor != null) {
 			int cursorCount = cursor.getCount();
+			Log.d(TAG, "################# cursorCount = " + cursorCount);
 			if (cursor.moveToFirst()) {		
 				int IDColumnIndex = cursor.getColumnIndex(indexColumnName);
 				int subjectColumnIndex = cursor.getColumnIndex(subjectColumnName);
@@ -585,22 +568,21 @@ public class GrammarUtils {
 	private static ArrayList<Integer> getExamples(Context context, int questionType, long id,
 			ArrayList<String> exams, int exampleCount, int answerCount) {
 		Log.e(TAG, "getExamples questionType = " + questionType + " id = " + id + " exampleCount = " + exampleCount + " answerCount = " + answerCount);
-		DatabaseHelper dbHelper = getDatabaseHelper(context);
+
 		if (id < 0) {
 			Log.e(TAG, "failed to getExamples id = " + id);
 			return null;
 		}
 		
-		SQLiteDatabase db = dbHelper.getReadableDatabase();
 		String answerSelection = null;
 		String exampleSelection = null;
-		String tableName = null;
 		String[] selectionArgs = { String.valueOf(id) };
 		String exampleColumnName = null;
 		
+		Uri uri = null;
 		if (questionType == TYPE_QUESTION_GRAMMAR) {
 			exampleColumnName = GrammarProviderContract.Grammars.COLUMN_NAME_GRAMMAR;
-			tableName = GrammarProviderContract.Grammars.TABLE_NAME;
+			uri = GrammarProviderContract.Grammars.CONTENT_URI;
 			
 			String mappingSelection = "SELECT " + GrammarProviderContract.Mappings.COLUMN_NAME_GRAMMAR_ID
 					+ " FROM " + GrammarProviderContract.Mappings.TABLE_NAME
@@ -609,7 +591,7 @@ public class GrammarUtils {
 			answerSelection = GrammarProviderContract.Grammars._ID + " IN (" + mappingSelection + ")";
 			exampleSelection = GrammarProviderContract.Grammars._ID + " NOT IN (" + mappingSelection + ")"; 
 		} else if (questionType == TYPE_QUESTION_MEANING) {
-			tableName = GrammarProviderContract.Meanings.TABLE_NAME;
+			uri = GrammarProviderContract.Meanings.CONTENT_URI;
 			exampleColumnName = GrammarProviderContract.Meanings.COLUMN_NAME_WORD;
 			String mappingSelection = "SELECT " + GrammarProviderContract.Mappings.COLUMN_NAME_MEANING_ID
 					+ " FROM " + GrammarProviderContract.Mappings.TABLE_NAME
@@ -623,14 +605,7 @@ public class GrammarUtils {
 		
 		String[] projections = { exampleColumnName };
 		
-		Cursor cursor = db.query(tableName, 
-				projections,
-				exampleSelection,
-				selectionArgs,
-				null,
-				null,
-				"RANDOM()",
-				String.valueOf(exampleCount));
+		Cursor cursor = context.getContentResolver().query(uri, projections, exampleSelection, selectionArgs, "RANDOM()");
 		
 		if (cursor != null) {
 			int cursorCount = cursor.getCount();
@@ -653,14 +628,7 @@ public class GrammarUtils {
 			return null;
 		}
 		
-		cursor = db.query(tableName, 
-				projections,
-				answerSelection,
-				selectionArgs,
-				null,
-				null,
-				"RANDOM()",
-				String.valueOf(answerCount));
+		cursor = context.getContentResolver().query(uri, projections, answerSelection, selectionArgs, "RANDOM()");
 		
 		ArrayList<Integer> correct = new ArrayList<Integer>();
 		if (cursor != null) {

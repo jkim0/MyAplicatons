@@ -385,7 +385,7 @@ public class GrammarContentProvider extends ContentProvider {
 				}
 				
 				ContentValues mappingValues = new ContentValues();
-				mappingValues.put(GrammarProviderContract.Mappings.COLUMN_NAME_GRAMMAR_ID, timeStamp);
+				mappingValues.put(GrammarProviderContract.Mappings.COLUMN_NAME_GRAMMAR_ID, grammarId);
 				mappingValues.put(GrammarProviderContract.Mappings.COLUMN_NAME_MEANING_ID, meaningId);
 				db.insert(GrammarProviderContract.Mappings.TABLE_NAME, null, mappingValues);
 			}

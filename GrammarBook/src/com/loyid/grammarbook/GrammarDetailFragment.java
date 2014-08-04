@@ -178,8 +178,6 @@ public class GrammarDetailFragment extends Fragment implements OnInitListener {
 
 		@Override
 		protected void onPostExecute(Grammar info) {
-			// TODO Auto-generated method stub
-			Toast.makeText(getActivity(), R.string.msg_load_data_done, Toast.LENGTH_SHORT).show();
 			super.onPostExecute(info);
 			onLoadCompleted(info);
 			

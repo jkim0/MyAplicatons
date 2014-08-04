@@ -14,11 +14,8 @@ import android.text.TextWatcher;
 import android.app.DialogFragment;
 import android.app.Fragment;
 import android.app.FragmentTransaction;
-import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -38,8 +35,6 @@ import android.widget.Toast;
 public class EditGrammarActivity extends ActionBarActivity implements OnInitListener {
 	private static final String TAG = "EditGrammarActivity";
 	private LinearLayout mAddedItemList = null;
-
-	private DatabaseHelper mDatabaseHelper = null;
 	
 	private Button mBtnCheck = null;
 	private Button mBtnPlay = null;
@@ -67,7 +62,6 @@ public class EditGrammarActivity extends ActionBarActivity implements OnInitList
 		mMaxLineCount = Integer.valueOf(prefs.getString("max_meaning_count", String.valueOf(GrammarUtils.DEFAULT_MEANING_COUNT)));
 		mHandler = new MessageHandler();
 		mTTS = new TextToSpeech(this, this);
-		mDatabaseHelper = new DatabaseHelper(this);
 		setContentView(R.layout.activity_edit_grammar);
 		EditText edit = (EditText)findViewById(R.id.edit_grammar);
 		edit.addTextChangedListener(new TextWatcher() {

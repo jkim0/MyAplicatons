@@ -1,13 +1,11 @@
 package com.loyid.grammarbook;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 
 import android.os.Bundle;
 import android.app.ListFragment;
 import android.content.Context;
 import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
 import android.util.Log;
 import android.util.SparseArray;
 import android.view.View;
@@ -58,8 +56,6 @@ public class GrammarListFragment extends ListFragment {
 	}
 	
 	private GrammarListItemAdapter mAdapter = null;
-	
-	private DatabaseHelper mDatabaseHelper = null;
 
 	/**
 	 * Mandatory empty constructor for the fragment manager to instantiate the
@@ -151,8 +147,7 @@ public class GrammarListFragment extends ListFragment {
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-
-		mDatabaseHelper = new DatabaseHelper(getActivity());
+		
 		loadGrammarList();
 	}
 	
