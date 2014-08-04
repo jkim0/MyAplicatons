@@ -4,9 +4,14 @@ import com.loyid.grammarbook.GrammarUtils.Questions;
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.preference.PreferenceActivity;
 import android.app.Fragment;
+import android.content.Intent;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
@@ -39,8 +44,31 @@ public class PrepareTestFragment extends Fragment {
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		setHasOptionsMenu(true);
 		if (getArguments() != null) {
 		}
+	}
+
+	@Override
+	public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+		// TODO Auto-generated method stub
+		inflater.inflate(R.menu.grammar_test, menu);
+		super.onCreateOptionsMenu(menu, inflater);
+	}
+
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		int id = item.getItemId();
+		if (id == R.id.action_settings) {
+			Intent intent = new Intent(Intent.ACTION_MAIN);
+			intent.setClass(getActivity(), GrammarPreferenceActivity.class);
+			intent.putExtra(PreferenceActivity.EXTRA_SHOW_FRAGMENT, "com.loyid.grammarbook.SettingsActivity$TestPreferenceFragment");
+			intent.putExtra(PreferenceActivity.EXTRA_SHOW_FRAGMENT_TITLE, R.string.pref_header_label_test);
+			intent.putExtra(PreferenceActivity.EXTRA_NO_HEADERS, true);
+			startActivity(intent);
+			return true;
+		}
+		return super.onOptionsItemSelected(item);
 	}
 
 	@Override

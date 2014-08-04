@@ -19,6 +19,7 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.preference.PreferenceActivity;
 import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.Menu;
@@ -46,8 +47,6 @@ public class EditGrammarActivity extends ActionBarActivity implements OnInitList
 	
 	private TextToSpeech mTTS;
 	
-	private int mMaxLineCount = GrammarUtils.DEFAULT_MEANING_COUNT;
-	
 	private String mCurrentGrammar = null;
 	
 	public static final String EXTRA_GRAMMAR_ID = "grammar_id";
@@ -56,10 +55,6 @@ public class EditGrammarActivity extends ActionBarActivity implements OnInitList
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		
-		Intent intent = getIntent();
-		
-		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-		mMaxLineCount = Integer.valueOf(prefs.getString("max_meaning_count", String.valueOf(GrammarUtils.DEFAULT_MEANING_COUNT)));
 		mHandler = new MessageHandler();
 		mTTS = new TextToSpeech(this, this);
 		setContentView(R.layout.activity_edit_grammar);
@@ -109,7 +104,7 @@ public class EditGrammarActivity extends ActionBarActivity implements OnInitList
 		
 		mBtnAdd = (Button)findViewById(R.id.btn_add);
 		
-
+		Intent intent = getIntent();
 		if (intent.hasExtra("grammar_id")) {
 			long grammarId = intent.getLongExtra("grammar_id", -1);
 			Grammar info = GrammarUtils.getGrammarInfo(this, grammarId);
@@ -135,6 +130,14 @@ public class EditGrammarActivity extends ActionBarActivity implements OnInitList
 		if (id == R.id.action_done) {
 			mHandler.sendEmptyMessage(MSG_SAVE_GRAMMAR);
 			return true;
+		} else if (id == R.id.action_settings) {
+			Intent intent = new Intent(Intent.ACTION_MAIN);
+			intent.setClass(this, GrammarPreferenceActivity.class);
+			intent.putExtra(PreferenceActivity.EXTRA_SHOW_FRAGMENT, "com.loyid.grammarbook.SettingsActivity$GrammarEditPreferenceFragment");
+			intent.putExtra(PreferenceActivity.EXTRA_SHOW_FRAGMENT_TITLE, R.string.pref_header_label_grammar_edit);
+			intent.putExtra(PreferenceActivity.EXTRA_NO_HEADERS, true);
+			startActivity(intent);
+			return true;
 		}
 		return super.onOptionsItemSelected(item);
 	}
@@ -148,8 +151,10 @@ public class EditGrammarActivity extends ActionBarActivity implements OnInitList
 	}
 	
 	private void addMeaningRow(int type, String meaning) {
-		if (mAddedItemList.getChildCount() > mMaxLineCount) {
-			Log.d(TAG, "Can not add meaning line. It's full. max = " + mMaxLineCount);
+		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+		int max = Integer.valueOf(prefs.getString("max_meaning_count", String.valueOf(GrammarUtils.DEFAULT_MEANING_COUNT)));
+		if (mAddedItemList.getChildCount() > max) {
+			Log.d(TAG, "Can not add meaning line. It's full. max = " + max);
 			Toast.makeText(this, R.string.msg_meaning_row_full, Toast.LENGTH_SHORT).show();
 			return;
 		}
