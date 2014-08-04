@@ -126,66 +126,7 @@ public class GrammarContentProvider extends ContentProvider {
 		try {
 			rowId = db.insert(GrammarProviderContract.Grammars.TABLE_NAME, null, values);
 			
-			if (meanings != null) {
-				String[] meaningGroup = meanings.split(GrammarUtils.IDENTIFIER_MEANING_GROUP);
-				for (int i = 0; i < meaningGroup.length; i++) {
-					String[] splits = meaningGroup[i].split(GrammarUtils.IDENTIFIER_MEANING);
-					int type = Integer.valueOf(splits[0]);
-					String meaning = splits[1];
-					Log.d(TAG, "################ type = " + type);
-					Log.d(TAG, "################ meaning = " + meaning);
-					
-					ContentValues meanValues = new ContentValues();
-					meanValues.put(GrammarProviderContract.Meanings.COLUMN_NAME_TYPE, type);
-					meanValues.put(GrammarProviderContract.Meanings.COLUMN_NAME_WORD, meaning);
-					
-					String whereClause = GrammarProviderContract.Mappings.COLUMN_NAME_GRAMMAR_ID + " = ?";
-					String[] whereArgs = { String.valueOf(rowId) };
-					int result = db.delete(GrammarProviderContract.Mappings.TABLE_NAME, whereClause, whereArgs);
-					Log.d(TAG, "remove " + result + " items from Mappings table");
-					
-					String selection = GrammarProviderContract.Meanings.COLUMN_NAME_WORD + " = ?"
-							+ " AND " + GrammarProviderContract.Meanings.COLUMN_NAME_TYPE + " = ?";
-	
-					String[] selectionArgs = new String[] { meaning, splits[0] };
-					
-					Cursor cursor = db.query(GrammarProviderContract.Meanings.TABLE_NAME, 
-							null,
-							selection,
-							selectionArgs,
-							null,
-							null,
-							GrammarProviderContract.Meanings.DEFAULT_SORT_ORDER);
-	
-					long meaningId = -1;
-					if (cursor != null) {
-						if (cursor.getCount() > 0 && cursor.moveToFirst()) {
-							int index = cursor.getColumnIndex(GrammarProviderContract.Meanings._ID);
-							meaningId = cursor.getLong(index);
-						}
-						
-						cursor.close();
-					}
-	
-					if (meaningId < 0) {
-						Log.d(TAG, "insert meaning");
-						meanValues.put(GrammarProviderContract.Meanings.COLUMN_NAME_CREATED_DATE, now);
-						meanValues.put(GrammarProviderContract.Meanings.COLUMN_NAME_MODIFIED_DATE, now);
-						meaningId = db.insert(GrammarProviderContract.Meanings.TABLE_NAME, null, meanValues);
-					} else {
-						Log.d(TAG, "update meaning index = " + meaningId);
-						whereClause = GrammarProviderContract.Meanings._ID + " = ?";
-						whereArgs = new String[] { String.valueOf(meaningId) };
-						meanValues.put(GrammarProviderContract.Meanings.COLUMN_NAME_MODIFIED_DATE, now);
-						db.update(GrammarProviderContract.Meanings.TABLE_NAME, meanValues, whereClause, whereArgs);
-					}
-					
-					ContentValues mappingValues = new ContentValues();
-					mappingValues.put(GrammarProviderContract.Mappings.COLUMN_NAME_GRAMMAR_ID, rowId);
-					mappingValues.put(GrammarProviderContract.Mappings.COLUMN_NAME_MEANING_ID, meaningId);
-					db.insert(GrammarProviderContract.Mappings.TABLE_NAME, null, mappingValues);
-				}
-			}
+			updateMeaningInfo(db, rowId, meanings, now);
 			db.setTransactionSuccessful();
 		} finally {
 			db.endTransaction();
@@ -352,65 +293,8 @@ public class GrammarContentProvider extends ContentProvider {
 		
 		try {
 			count = db.update(GrammarProviderContract.Grammars.TABLE_NAME, initialValues, selection, selectionArgs);
+			updateMeaningInfo(db, rowId, meanings, now);
 			
-			if (meanings != null) {
-				String[] meaningGroup = meanings.split(GrammarUtils.IDENTIFIER_MEANING_GROUP);
-				for (int i = 0; i < meaningGroup.length; i++) {
-					String[] splits = meaningGroup[i].split(GrammarUtils.IDENTIFIER_MEANING);
-					int type = Integer.valueOf(splits[0]);
-					String meaning = splits[1];
-					
-					ContentValues meanValues = new ContentValues();
-					meanValues.put(GrammarProviderContract.Meanings.COLUMN_NAME_TYPE, type);
-					meanValues.put(GrammarProviderContract.Meanings.COLUMN_NAME_WORD, meaning);
-					
-					String whereClause = GrammarProviderContract.Mappings.COLUMN_NAME_GRAMMAR_ID + " = ?";
-					String[] whereArgs = { String.valueOf(rowId) };
-					int result = db.delete(GrammarProviderContract.Mappings.TABLE_NAME, whereClause, whereArgs);
-					Log.d(TAG, "remove " + result + " items from Mappings table");
-					
-					String mselection = GrammarProviderContract.Meanings.COLUMN_NAME_WORD + " = ?"
-							+ " AND " + GrammarProviderContract.Meanings.COLUMN_NAME_TYPE + " = ?";
-	
-					String[] mselectionArgs = new String[] { meaning, splits[0] };
-					
-					Cursor cursor = db.query(GrammarProviderContract.Meanings.TABLE_NAME, 
-							null,
-							mselection,
-							mselectionArgs,
-							null,
-							null,
-							GrammarProviderContract.Meanings.DEFAULT_SORT_ORDER);
-	
-					long meaningId = -1;
-					if (cursor != null) {
-						if (cursor.getCount() > 0 && cursor.moveToFirst()) {
-							int index = cursor.getColumnIndex(GrammarProviderContract.Meanings._ID);
-							meaningId = cursor.getLong(index);
-						}
-						
-						cursor.close();
-					}
-	
-					if (meaningId < 0) {
-						Log.d(TAG, "insert meaning");
-						meanValues.put(GrammarProviderContract.Meanings.COLUMN_NAME_CREATED_DATE, now);
-						meanValues.put(GrammarProviderContract.Meanings.COLUMN_NAME_MODIFIED_DATE, now);
-						meaningId = db.insert(GrammarProviderContract.Meanings.TABLE_NAME, null, meanValues);
-					} else {
-						Log.d(TAG, "update meaning index = " + meaningId);
-						whereClause = GrammarProviderContract.Meanings._ID + " = ?";
-						whereArgs = new String[] { String.valueOf(meaningId) };
-						meanValues.put(GrammarProviderContract.Meanings.COLUMN_NAME_MODIFIED_DATE, now);
-						db.update(GrammarProviderContract.Meanings.TABLE_NAME, meanValues, whereClause, whereArgs);
-					}
-					
-					ContentValues mappingValues = new ContentValues();
-					mappingValues.put(GrammarProviderContract.Mappings.COLUMN_NAME_GRAMMAR_ID, rowId);
-					mappingValues.put(GrammarProviderContract.Mappings.COLUMN_NAME_MEANING_ID, meaningId);
-					db.insert(GrammarProviderContract.Mappings.TABLE_NAME, null, mappingValues);
-				}
-			}
 			db.setTransactionSuccessful();
 		} finally {
 			db.endTransaction();
@@ -445,5 +329,66 @@ public class GrammarContentProvider extends ContentProvider {
 		}
 		
 		return count;
+	}
+	
+	private void updateMeaningInfo(SQLiteDatabase db, long grammarId, String meanings, long timeStamp) {
+		if (meanings != null) {
+			String[] meaningGroup = meanings.split(GrammarUtils.IDENTIFIER_MEANING_GROUP);
+			for (int i = 0; i < meaningGroup.length; i++) {
+				String[] splits = meaningGroup[i].split(GrammarUtils.IDENTIFIER_MEANING);
+				int type = Integer.valueOf(splits[0]);
+				String meaning = splits[1];
+				
+				ContentValues meanValues = new ContentValues();
+				meanValues.put(GrammarProviderContract.Meanings.COLUMN_NAME_TYPE, type);
+				meanValues.put(GrammarProviderContract.Meanings.COLUMN_NAME_WORD, meaning);
+				
+				String whereClause = GrammarProviderContract.Mappings.COLUMN_NAME_GRAMMAR_ID + " = ?";
+				String[] whereArgs = { String.valueOf(grammarId) };
+				int result = db.delete(GrammarProviderContract.Mappings.TABLE_NAME, whereClause, whereArgs);
+				Log.d(TAG, "remove " + result + " items from Mappings table");
+				
+				String mselection = GrammarProviderContract.Meanings.COLUMN_NAME_WORD + " = ?"
+						+ " AND " + GrammarProviderContract.Meanings.COLUMN_NAME_TYPE + " = ?";
+
+				String[] mselectionArgs = new String[] { meaning, splits[0] };
+				
+				Cursor cursor = db.query(GrammarProviderContract.Meanings.TABLE_NAME,
+						null,
+						mselection,
+						mselectionArgs,
+						null,
+						null,
+						GrammarProviderContract.Meanings.DEFAULT_SORT_ORDER);
+
+				long meaningId = -1;
+				if (cursor != null) {
+					if (cursor.getCount() > 0 && cursor.moveToFirst()) {
+						int index = cursor.getColumnIndex(GrammarProviderContract.Meanings._ID);
+						meaningId = cursor.getLong(index);
+					}
+					
+					cursor.close();
+				}
+
+				if (meaningId < 0) {
+					Log.d(TAG, "insert meaning");
+					meanValues.put(GrammarProviderContract.Meanings.COLUMN_NAME_CREATED_DATE, timeStamp);
+					meanValues.put(GrammarProviderContract.Meanings.COLUMN_NAME_MODIFIED_DATE, timeStamp);
+					meaningId = db.insert(GrammarProviderContract.Meanings.TABLE_NAME, null, meanValues);
+				} else {
+					Log.d(TAG, "update meaning index = " + meaningId);
+					whereClause = GrammarProviderContract.Meanings._ID + " = ?";
+					whereArgs = new String[] { String.valueOf(meaningId) };
+					meanValues.put(GrammarProviderContract.Meanings.COLUMN_NAME_MODIFIED_DATE, timeStamp);
+					db.update(GrammarProviderContract.Meanings.TABLE_NAME, meanValues, whereClause, whereArgs);
+				}
+				
+				ContentValues mappingValues = new ContentValues();
+				mappingValues.put(GrammarProviderContract.Mappings.COLUMN_NAME_GRAMMAR_ID, timeStamp);
+				mappingValues.put(GrammarProviderContract.Mappings.COLUMN_NAME_MEANING_ID, meaningId);
+				db.insert(GrammarProviderContract.Mappings.TABLE_NAME, null, mappingValues);
+			}
+		}
 	}
 }
