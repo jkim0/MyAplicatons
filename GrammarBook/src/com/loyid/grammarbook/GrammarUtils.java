@@ -11,14 +11,11 @@ import java.util.HashMap;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.util.Log;
 
 public class GrammarUtils {
 	private static final String TAG = "GrammarUtils";
-	
-	private static DatabaseHelper sDatabaseHelper = null;
 	
 	public static final int GRAMMAR_TYPE_NOUN = 0;
 	public static final int GRAMMAR_TYPE_VERB = 1;
@@ -250,12 +247,6 @@ public class GrammarUtils {
 			sb.append("}");
 			return sb.toString();
 		}
-	}
-	
-	public static DatabaseHelper getDatabaseHelper(Context context) {
-		if (sDatabaseHelper == null) 
-			sDatabaseHelper = new DatabaseHelper(context);
-		return sDatabaseHelper;
 	}
 	
 	public static long getGrammarId(Context context, String strGrammar) {
@@ -658,14 +649,11 @@ public class GrammarUtils {
 	}
 	
 	public static ArrayList<String> getGrammarsByMeaningId(Context context, long id) {
-		DatabaseHelper dbHelper = getDatabaseHelper(context);
-		
+		Log.d(TAG, "getGrammarsByMeaningId id = " + id);
 		if (id < 0) {
 			Log.e(TAG, "failed to getGrammarsByMeaningId id = " + id);
 			return null;
 		}
-		
-		SQLiteDatabase db = dbHelper.getReadableDatabase();
 		
 		String [] projections = {
 			GrammarProviderContract.Grammars.COLUMN_NAME_GRAMMAR
@@ -677,13 +665,8 @@ public class GrammarUtils {
 				+ " WHERE " + GrammarProviderContract.Mappings.COLUMN_NAME_MEANING_ID + " = ?)";
 		String[] selectionArgs = { String.valueOf(id) };
 		
-		Cursor cursor = db.query(GrammarProviderContract.Grammars.TABLE_NAME, 
-				projections,
-				selection,
-				selectionArgs,
-				null,
-				null,
-				GrammarProviderContract.Grammars.DEFAULT_SORT_ORDER);
+		Cursor cursor = context.getContentResolver().query(GrammarProviderContract.Grammars.CONTENT_URI,
+				projections, selection, selectionArgs, GrammarProviderContract.Grammars.DEFAULT_SORT_ORDER);
 		
 		ArrayList<String> result = null;
 		if (cursor != null) {
