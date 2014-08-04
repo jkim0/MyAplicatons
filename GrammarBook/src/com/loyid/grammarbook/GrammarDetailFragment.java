@@ -6,6 +6,7 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.app.Activity;
 import android.app.Fragment;
+import android.content.Intent;
 import android.speech.tts.TextToSpeech;
 import android.speech.tts.TextToSpeech.OnInitListener;
 import android.util.Log;
@@ -54,15 +55,18 @@ public class GrammarDetailFragment extends Fragment implements OnInitListener {
 		setHasOptionsMenu(true);
 		
 		mTTS = new TextToSpeech(getActivity(), this);
+	}
 	
+	@Override
+	public void onResume() {
+		// TODO Auto-generated method stub
+		super.onResume();
+		
 		if (getArguments().containsKey(ARG_GRAMMAR_ID)) {
-			// Load the dummy content specified by the fragment
-			// arguments. In a real-world scenario, use a Loader
-			// to load content from a content provider.
 			loadGrammarInfo(getArguments().getLong(ARG_GRAMMAR_ID, -1));
 		}
 	}
-	
+
 	@Override
 	public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
 		// TODO Auto-generated method stub
@@ -90,7 +94,11 @@ public class GrammarDetailFragment extends Fragment implements OnInitListener {
 	}
 	
 	private void editCurrentGrammar() {
+		long grammarId = getArguments().getLong(ARG_GRAMMAR_ID, -1);
+		Intent editIntent = new Intent(getActivity(), EditGrammarActivity.class);
+		editIntent.putExtra(EditGrammarActivity.EXTRA_GRAMMAR_ID, grammarId);
 		
+		startActivity(editIntent);
 	}
 
 	@Override

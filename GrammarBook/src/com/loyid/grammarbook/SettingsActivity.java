@@ -6,6 +6,7 @@ import android.app.Fragment;
 import android.app.FragmentTransaction;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -185,7 +186,6 @@ public class SettingsActivity extends PreferenceActivity {
 				preference
 						.setSummary(index >= 0 ? listPreference.getEntries()[index]
 								: null);
-
 			} else {
 				// For all other preferences, set the summary to the value's
 				// simple string representation.
@@ -294,12 +294,12 @@ public class SettingsActivity extends PreferenceActivity {
 	}
 	
 	public void reloadDataFromFile() {
-		//loadDataFromFile();
+		loadDataFromFile();
 		Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
 		intent.addCategory(Intent.CATEGORY_OPENABLE);
 		intent.setType("*/*");
 		
-		this.startActivityForResult(intent, REQUEST_FILE_SELECT_CODE);
+		//this.startActivityForResult(intent, REQUEST_FILE_SELECT_CODE);
 	}
 	
 	@Override

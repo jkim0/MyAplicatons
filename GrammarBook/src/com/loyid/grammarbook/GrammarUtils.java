@@ -136,7 +136,7 @@ public class GrammarUtils {
 		public String mGrammar;
 		public ArrayList<Meaning> mMeanings = new ArrayList<Meaning>();
 		
-		public void addMeaing(Meaning newMean) {
+		public void addMeaning(Meaning newMean) {
 			Log.d(TAG, "addMeaning new = " + newMean);
 			for (int i = 0; i < mMeanings.size(); i++) {
 				final Meaning oldMean = mMeanings.get(i);
@@ -149,9 +149,9 @@ public class GrammarUtils {
 			mMeanings.add(newMean);
 		}
 		
-		public void addMeaing(int type, String typeStr, String meaning) {
+		public void addMeaning(int type, String typeStr, String meaning) {
 			Meaning mean = new Meaning(type, typeStr, meaning);
-			addMeaing(mean);
+			addMeaning(mean);
 		}
 		
 		public void setGrammar(String grammar) {
@@ -296,7 +296,7 @@ public class GrammarUtils {
 		int count = meanings.size();
 		
 		if (count <= 0) {
-			Log.e(TAG, "insert failed because there is no meaing fields.");
+			Log.e(TAG, "insert failed because there is no meaning fields.");
 			return false;
 		}
 		
@@ -360,7 +360,7 @@ public class GrammarUtils {
 						Log.d(TAG, "######## type = " + typeChar + " meaning = " + meaning);
 						if (meaning == null || meaning.length() == 0)
 							continue;
-						grammarData.addMeaing(getGrammarTypeByPrefix(typeChar), getGrammarTypeStringByPrefix(typeChar), meaning);
+						grammarData.addMeaning(getGrammarTypeByPrefix(typeChar), getGrammarTypeStringByPrefix(typeChar), meaning);
 					}
 					
 					if (grammarData.mMeanings.size() > 0) {
@@ -447,7 +447,7 @@ public class GrammarUtils {
 						typeStr = GrammarUtils.getGrammarTypeStringByType(type);
 						mean = splits[1];
 					}
-					grammarInfo.addMeaing(type, typeStr, mean);
+					grammarInfo.addMeaning(type, typeStr, mean);
 				}
 			}
 			
@@ -760,19 +760,16 @@ public class GrammarUtils {
 	
 	public static boolean deleteGrammar(Context context, long grammarId) {
 		Log.d(TAG, "deleteGrammar id = " + grammarId);
-		DatabaseHelper dbHelper = getDatabaseHelper(context);
 		
 		if (grammarId < 0) {
 			Log.e(TAG, "failed to deleteGrammar id = " + grammarId);
 			return false;
-		}
-		
-		SQLiteDatabase db = dbHelper.getWritableDatabase();
+		}		
 		
 		String whereClause = GrammarProviderContract.Grammars._ID + " = ?";
 		String[] whereArgs = { String.valueOf(grammarId) };
 		
-		int count = db.delete(GrammarProviderContract.Grammars.TABLE_NAME, whereClause, whereArgs);
+		int count = context.getContentResolver().delete(GrammarProviderContract.Grammars.CONTENT_URI, whereClause, whereArgs);
 		
 		return count > 0 ? true : false;
 	}

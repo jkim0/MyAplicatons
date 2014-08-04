@@ -132,6 +132,8 @@ public class GrammarContentProvider extends ContentProvider {
 					String[] splits = meaningGroup[i].split(GrammarUtils.IDENTIFIER_MEANING);
 					int type = Integer.valueOf(splits[0]);
 					String meaning = splits[1];
+					Log.d(TAG, "################ type = " + type);
+					Log.d(TAG, "################ meaning = " + meaning);
 					
 					ContentValues meanValues = new ContentValues();
 					meanValues.put(GrammarProviderContract.Meanings.COLUMN_NAME_TYPE, type);
@@ -167,21 +169,21 @@ public class GrammarContentProvider extends ContentProvider {
 	
 					if (meaningId < 0) {
 						Log.d(TAG, "insert meaning");
-						values.put(GrammarProviderContract.Meanings.COLUMN_NAME_CREATED_DATE, now);
-						values.put(GrammarProviderContract.Meanings.COLUMN_NAME_MODIFIED_DATE, now);
-						meaningId = db.insert(GrammarProviderContract.Meanings.TABLE_NAME, null, values);
+						meanValues.put(GrammarProviderContract.Meanings.COLUMN_NAME_CREATED_DATE, now);
+						meanValues.put(GrammarProviderContract.Meanings.COLUMN_NAME_MODIFIED_DATE, now);
+						meaningId = db.insert(GrammarProviderContract.Meanings.TABLE_NAME, null, meanValues);
 					} else {
 						Log.d(TAG, "update meaning index = " + meaningId);
 						whereClause = GrammarProviderContract.Meanings._ID + " = ?";
 						whereArgs = new String[] { String.valueOf(meaningId) };
-						values.put(GrammarProviderContract.Meanings.COLUMN_NAME_MODIFIED_DATE, now);
-						db.update(GrammarProviderContract.Meanings.TABLE_NAME, values, whereClause, whereArgs);
+						meanValues.put(GrammarProviderContract.Meanings.COLUMN_NAME_MODIFIED_DATE, now);
+						db.update(GrammarProviderContract.Meanings.TABLE_NAME, meanValues, whereClause, whereArgs);
 					}
 					
-					values = new ContentValues();
-					values.put(GrammarProviderContract.Mappings.COLUMN_NAME_GRAMMAR_ID, rowId);
-					values.put(GrammarProviderContract.Mappings.COLUMN_NAME_MEANING_ID, meaningId);
-					db.insert(GrammarProviderContract.Mappings.TABLE_NAME, null, values);
+					ContentValues mappingValues = new ContentValues();
+					mappingValues.put(GrammarProviderContract.Mappings.COLUMN_NAME_GRAMMAR_ID, rowId);
+					mappingValues.put(GrammarProviderContract.Mappings.COLUMN_NAME_MEANING_ID, meaningId);
+					db.insert(GrammarProviderContract.Mappings.TABLE_NAME, null, mappingValues);
 				}
 			}
 			db.setTransactionSuccessful();
@@ -392,21 +394,21 @@ public class GrammarContentProvider extends ContentProvider {
 	
 					if (meaningId < 0) {
 						Log.d(TAG, "insert meaning");
-						values.put(GrammarProviderContract.Meanings.COLUMN_NAME_CREATED_DATE, now);
-						values.put(GrammarProviderContract.Meanings.COLUMN_NAME_MODIFIED_DATE, now);
-						meaningId = db.insert(GrammarProviderContract.Meanings.TABLE_NAME, null, values);
+						meanValues.put(GrammarProviderContract.Meanings.COLUMN_NAME_CREATED_DATE, now);
+						meanValues.put(GrammarProviderContract.Meanings.COLUMN_NAME_MODIFIED_DATE, now);
+						meaningId = db.insert(GrammarProviderContract.Meanings.TABLE_NAME, null, meanValues);
 					} else {
 						Log.d(TAG, "update meaning index = " + meaningId);
 						whereClause = GrammarProviderContract.Meanings._ID + " = ?";
 						whereArgs = new String[] { String.valueOf(meaningId) };
-						values.put(GrammarProviderContract.Meanings.COLUMN_NAME_MODIFIED_DATE, now);
-						db.update(GrammarProviderContract.Meanings.TABLE_NAME, values, whereClause, whereArgs);
+						meanValues.put(GrammarProviderContract.Meanings.COLUMN_NAME_MODIFIED_DATE, now);
+						db.update(GrammarProviderContract.Meanings.TABLE_NAME, meanValues, whereClause, whereArgs);
 					}
 					
-					values = new ContentValues();
-					values.put(GrammarProviderContract.Mappings.COLUMN_NAME_GRAMMAR_ID, rowId);
-					values.put(GrammarProviderContract.Mappings.COLUMN_NAME_MEANING_ID, meaningId);
-					db.insert(GrammarProviderContract.Mappings.TABLE_NAME, null, values);
+					ContentValues mappingValues = new ContentValues();
+					mappingValues.put(GrammarProviderContract.Mappings.COLUMN_NAME_GRAMMAR_ID, rowId);
+					mappingValues.put(GrammarProviderContract.Mappings.COLUMN_NAME_MEANING_ID, meaningId);
+					db.insert(GrammarProviderContract.Mappings.TABLE_NAME, null, mappingValues);
 				}
 			}
 			db.setTransactionSuccessful();
@@ -426,8 +428,11 @@ public class GrammarContentProvider extends ContentProvider {
 		switch (sUriMatcher.match(uri)) {
 		case GRAMMAR_ID:
 			String grammarId = uri.getPathSegments().get(GrammarProviderContract.Grammars.GRAMMAR_ID_PATH_POSITION);
+			String prependSelection = GrammarProviderContract.Grammars._ID + " = " + grammarId;
 			if (selection != null) {
 				selection += " AND " + GrammarProviderContract.Grammars._ID + " = " + grammarId;
+			} else {
+				selection = prependSelection;
 			}
 			count = updateGrammar(Integer.valueOf(grammarId), values, selection, selectionArgs);
 			break;

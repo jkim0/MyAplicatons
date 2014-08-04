@@ -194,7 +194,7 @@ public final class GrammarProviderContract {
 		
 		public static final String COLUMN_NAME_GRAMMAR_ID = "grammar_id";
 		
-		public static final String COLUMN_NAME_MEANING_ID = "meaing_id";
+		public static final String COLUMN_NAME_MEANING_ID = "meaning_id";
 		
 		/**
 		 * The default sort order for this table

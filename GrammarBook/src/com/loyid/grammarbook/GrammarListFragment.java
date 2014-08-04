@@ -80,7 +80,6 @@ public class GrammarListFragment extends ListFragment {
 			cache.grammar.setText(grammar);
 			String strMeaning = cursor.getString(cache.meaningColumnIndex);
 			
-			Log.d(TAG, "strMeaning = " + strMeaning);
 			String[] group = strMeaning.split("#");
 			StringBuilder sb = new StringBuilder();
 			SparseArray<ArrayList<String>> array = new SparseArray<ArrayList<String>>();

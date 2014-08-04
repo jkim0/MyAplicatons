@@ -8,6 +8,7 @@ import com.loyid.grammarbook.PrepareTestFragment.OnFragmentInteractionListener;
 
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.app.Activity;
 import android.app.Fragment;
 import android.content.Context;
@@ -60,9 +61,9 @@ public class GrammarTestFragment extends Fragment {
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		
-		SharedPreferences prefs = getActivity().getSharedPreferences(getActivity().getPackageName(), Context.MODE_PRIVATE);
-		mQuestionCount = prefs.getInt("test_count", GrammarUtils.DEFAULT_TEST_COUNT);
-		mExampleCount = prefs.getInt("test_example_count", GrammarUtils.DEFAULT_EXAMPLE_COUNT);
+		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
+		mQuestionCount = Integer.valueOf(prefs.getString("test_count", String.valueOf(GrammarUtils.DEFAULT_TEST_COUNT)));
+		mExampleCount = Integer.valueOf(prefs.getString("test_example_count", String.valueOf(GrammarUtils.DEFAULT_EXAMPLE_COUNT)));
 		
 		if (getArguments() != null) {
 			mTestType = getArguments().getInt(ARG_TEST_TYPE);

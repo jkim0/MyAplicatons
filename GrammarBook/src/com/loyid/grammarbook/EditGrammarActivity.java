@@ -1,8 +1,10 @@
 package com.loyid.grammarbook;
 
+import java.util.ArrayList;
 import java.util.Locale;
 
 import com.loyid.grammarbook.GrammarUtils.Grammar;
+import com.loyid.grammarbook.GrammarUtils.Meaning;
 
 import android.speech.tts.TextToSpeech;
 import android.speech.tts.TextToSpeech.OnInitListener;
@@ -13,12 +15,14 @@ import android.app.DialogFragment;
 import android.app.Fragment;
 import android.app.FragmentTransaction;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -51,12 +55,16 @@ public class EditGrammarActivity extends ActionBarActivity implements OnInitList
 	
 	private String mCurrentGrammar = null;
 	
+	public static final String EXTRA_GRAMMAR_ID = "grammar_id";
+	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		
-		SharedPreferences prefs = getSharedPreferences(getPackageName(), Context.MODE_PRIVATE);
-		mMaxLineCount = prefs.getInt("max_meaning_count", GrammarUtils.DEFAULT_MEANING_COUNT);
+		Intent intent = getIntent();
+		
+		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+		mMaxLineCount = Integer.valueOf(prefs.getString("max_meaning_count", String.valueOf(GrammarUtils.DEFAULT_MEANING_COUNT)));
 		mHandler = new MessageHandler();
 		mTTS = new TextToSpeech(this, this);
 		mDatabaseHelper = new DatabaseHelper(this);
@@ -106,7 +114,16 @@ public class EditGrammarActivity extends ActionBarActivity implements OnInitList
 		});
 		
 		mBtnAdd = (Button)findViewById(R.id.btn_add);
-	}
+		
+
+		if (intent.hasExtra("grammar_id")) {
+			long grammarId = intent.getLongExtra("grammar_id", -1);
+			Grammar info = GrammarUtils.getGrammarInfo(this, grammarId);
+			edit.setText(info.mGrammar);
+			edit.setEnabled(false);
+			checkGrammar();
+		}
+	}	
 
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
@@ -138,7 +155,7 @@ public class EditGrammarActivity extends ActionBarActivity implements OnInitList
 	
 	private void addMeaningRow(int type, String meaning) {
 		if (mAddedItemList.getChildCount() > mMaxLineCount) {
-			Log.d(TAG, "Can not add meaing line. It's full. max = " + mMaxLineCount);
+			Log.d(TAG, "Can not add meaning line. It's full. max = " + mMaxLineCount);
 			Toast.makeText(this, R.string.msg_meaning_row_full, Toast.LENGTH_SHORT).show();
 			return;
 		}
@@ -214,54 +231,12 @@ public class EditGrammarActivity extends ActionBarActivity implements OnInitList
 	}
 	
 	private void reloadMeaningRows(long grammarId) {
-		String selection = GrammarProviderContract.Mappings.COLUMN_NAME_GRAMMAR_ID + " = ?";
-		String [] selectionArgs = { String.valueOf(grammarId) };
-		String[] projection = { GrammarProviderContract.Mappings.COLUMN_NAME_MEANING_ID };
+		Grammar info = GrammarUtils.getGrammarInfo(this,  grammarId);
+		ArrayList<Meaning> meanInfos = info.mMeanings;
 		
-		SQLiteDatabase db = mDatabaseHelper.getReadableDatabase();
-		Cursor cursor = db.query(GrammarProviderContract.Mappings.TABLE_NAME,
-				projection,
-				selection,
-				selectionArgs,
-				null,
-				null,
-				GrammarProviderContract.Mappings.COLUMN_NAME_MEANING_ID + " ASC");
-		
-		if (cursor != null) {
-			if (cursor.moveToFirst()) {
-				selection = GrammarProviderContract.Meanings._ID + " = ? ";
-				for (int i = 0; i < cursor.getCount(); i++) {
-					int columnIndex = cursor.getColumnIndex(GrammarProviderContract.Mappings.COLUMN_NAME_MEANING_ID);
-					long meaningId = cursor.getInt(columnIndex);
-					selectionArgs = new String[] { String.valueOf(meaningId) };
-					projection = new String[] { 
-							GrammarProviderContract.Meanings.COLUMN_NAME_TYPE,
-							GrammarProviderContract.Meanings.COLUMN_NAME_WORD
-					};
-					
-					Cursor meaningCursor = db.query(GrammarProviderContract.Meanings.TABLE_NAME,
-							projection,
-							selection,
-							selectionArgs,
-							null,
-							null,
-							GrammarProviderContract.Meanings.DEFAULT_SORT_ORDER);
-					
-					if (meaningCursor != null) {
-						if (meaningCursor.getCount() > 0 && meaningCursor.moveToFirst()) {
-							columnIndex = meaningCursor.getColumnIndex(GrammarProviderContract.Meanings.COLUMN_NAME_TYPE);
-							int type = meaningCursor.getInt(columnIndex);
-							columnIndex = meaningCursor.getColumnIndex(GrammarProviderContract.Meanings.COLUMN_NAME_WORD);
-							String meaning = meaningCursor.getString(columnIndex);
-							addMeaningRow(type, meaning);
-						}
-						meaningCursor.close();
-					}
-					
-					cursor.moveToNext();
-				}
-			}
-			cursor.close();
+		for (int i = 0; i < meanInfos.size(); i++) {
+			Meaning mean = meanInfos.get(i);
+			addMeaningRow(mean.mType, mean.mMeaning);
 		}
 	}
 	
@@ -303,8 +278,7 @@ public class EditGrammarActivity extends ActionBarActivity implements OnInitList
 			String meaning = edit.getText().toString().trim();
 			
 			if (meaning != null && meaning.length() > 0) {
-				Log.d(TAG, "####### meaning = " + meaning);
-				grammarData.addMeaing(type, typeStr, meaning);
+				grammarData.addMeaning(type, typeStr, meaning);
 			}
 		}
 		
