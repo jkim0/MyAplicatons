@@ -5,11 +5,19 @@ import java.util.ArrayList;
 import android.os.Bundle;
 import android.app.ListFragment;
 import android.content.Context;
+import android.content.Intent;
 import android.database.Cursor;
 import android.util.Log;
 import android.util.SparseArray;
+import android.view.ContextMenu;
+import android.view.ContextMenu.ContextMenuInfo;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Adapter;
+import android.widget.AdapterView.AdapterContextMenuInfo;
 import android.widget.ListView;
 import android.widget.ResourceCursorAdapter;
 import android.widget.TextView;
@@ -147,10 +155,57 @@ public class GrammarListFragment extends ListFragment {
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		
+		setHasOptionsMenu(true);
 		loadGrammarList();
 	}
 	
+	@Override
+	public boolean onContextItemSelected(MenuItem item) {
+		int id = item.getItemId();
+		
+		AdapterContextMenuInfo info = (AdapterContextMenuInfo)item.getMenuInfo();
+		Adapter adapter = getListAdapter();
+		long itemId = adapter.getItemId(info.position);
+		if (id == R.id.action_detail) {
+			mOnItemSelectedListener.onItemSelected(itemId);
+			return true;
+		} else if (id == R.id.action_edit) {
+			Intent editIntent = new Intent(getActivity(), EditGrammarActivity.class);
+			editIntent.putExtra(EditGrammarActivity.EXTRA_GRAMMAR_ID, itemId);			
+			startActivity(editIntent);
+			return true;
+		} else if (id == R.id.action_delete) {
+			GrammarUtils.deleteGrammar(getActivity(), itemId);
+			return true;
+		}
+		return super.onContextItemSelected(item);
+	}
+
+	@Override
+	public void onCreateContextMenu(ContextMenu menu, View v,
+			ContextMenuInfo menuInfo) {
+		MenuInflater inflater = this.getActivity().getMenuInflater();
+		inflater.inflate(R.menu.grammar_list_context, menu);
+		super.onCreateContextMenu(menu, v, menuInfo);
+	}
+
+	@Override
+	public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+		inflater.inflate(R.menu.grammar_list, menu);
+		super.onCreateOptionsMenu(menu, inflater);
+	}
+
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		int itemId = item.getItemId();
+		if (itemId == R.id.action_add) {
+			Intent intent = new Intent(getActivity(), EditGrammarActivity.class);
+			startActivity(intent);
+			return true;
+		}
+		return super.onOptionsItemSelected(item);
+	}
+
 	private void loadGrammarList() {
 		String[] projection = {
 				GrammarProviderContract.Grammars._ID,
@@ -181,6 +236,8 @@ public class GrammarListFragment extends ListFragment {
 			setActivatedPosition(savedInstanceState
 					.getInt(STATE_ACTIVATED_POSITION));
 		}
+		
+		registerForContextMenu(getListView());
 	}
 
 	@Override
