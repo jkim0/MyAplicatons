@@ -3,6 +3,10 @@ package com.loyid.grammarbook;
 import java.util.ArrayList;
 
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Handler.Callback;
+import android.os.Message;
+import android.app.FragmentTransaction;
 import android.app.ListFragment;
 import android.content.Context;
 import android.content.Intent;
@@ -31,7 +35,7 @@ import android.widget.TextView;
  * Activities containing this fragment MUST implement the {@link Callbacks}
  * interface.
  */
-public class GrammarListFragment extends ListFragment {
+public class GrammarListFragment extends ListFragment implements Callback {
 	private static final String TAG = "GrammarListFragment";
 
 	/**
@@ -43,27 +47,15 @@ public class GrammarListFragment extends ListFragment {
 	/**
 	 * The current activated item position. Only used on tablets.
 	 */
-	private int mActivatedPosition = ListView.INVALID_POSITION;
-
-	/**
-	 * A callback interface that all activities containing this fragment must
-	 * implement. This mechanism allows activities to be notified of item
-	 * selections.
-	 */
-	public interface OnItemSelectedListener {
-		/**
-		 * Callback for when an item has been selected.
-		 */
-		public void onItemSelected(long id);
-	}
-	
-	private OnItemSelectedListener  mOnItemSelectedListener = null;
-	
-	public void setOnItemSelectedListener(OnItemSelectedListener listener) {
-		mOnItemSelectedListener = listener;
-	}
+	private int mActivatedPosition = 0;
 	
 	private GrammarListItemAdapter mAdapter = null;
+	
+	private boolean mDualPane = false;
+	
+	private Handler mHandler = new Handler(this);
+	
+	private static final int MSG_MOVE_CURRENT_POSITION = 0;
 
 	/**
 	 * Mandatory empty constructor for the fragment manager to instantiate the
@@ -154,11 +146,26 @@ public class GrammarListFragment extends ListFragment {
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
+		Log.d(TAG, "onCreate()");
 		super.onCreate(savedInstanceState);
 		setHasOptionsMenu(true);
-		loadGrammarList();
 	}
 	
+	@Override
+	public void onActivityCreated(Bundle savedInstanceState) {
+		// TODO Auto-generated method stub
+		super.onActivityCreated(savedInstanceState);
+		if (getActivity().findViewById(R.id.grammar_detail_container) != null) {
+			getListView().setChoiceMode(ListView.CHOICE_MODE_SINGLE);
+			mDualPane = true;
+		}
+		
+		if (savedInstanceState != null)
+			mActivatedPosition = savedInstanceState.getInt(STATE_ACTIVATED_POSITION);
+		
+		loadGrammarList();
+	}
+
 	@Override
 	public boolean onContextItemSelected(MenuItem item) {
 		int id = item.getItemId();
@@ -167,7 +174,7 @@ public class GrammarListFragment extends ListFragment {
 		Adapter adapter = getListAdapter();
 		long itemId = adapter.getItemId(info.position);
 		if (id == R.id.action_detail) {
-			mOnItemSelectedListener.onItemSelected(itemId);
+			showDetails(info.position);
 			return true;
 		} else if (id == R.id.action_edit) {
 			Intent editIntent = new Intent(getActivity(), EditGrammarActivity.class);
@@ -224,32 +231,55 @@ public class GrammarListFragment extends ListFragment {
 		}
 				
 		setListAdapter(mAdapter);
+		
+		if (mDualPane) {
+			showDetails(mActivatedPosition);
+		}
 	}
 
 	@Override
 	public void onViewCreated(View view, Bundle savedInstanceState) {
 		super.onViewCreated(view, savedInstanceState);
-
-		// Restore the previously serialized activated item position.
-		if (savedInstanceState != null
-				&& savedInstanceState.containsKey(STATE_ACTIVATED_POSITION)) {
-			Log.e(TAG, "############# saveInstance = " + savedInstanceState);
-			setActivatedPosition(savedInstanceState
-					.getInt(STATE_ACTIVATED_POSITION));
-		}
+		
+		Log.d(TAG, "onViewCreated()");
 		
 		registerForContextMenu(getListView());
 	}
 
 	@Override
-	public void onListItemClick(ListView listView, View view, int position,
-			long id) {
-		super.onListItemClick(listView, view, position, id);
-
-		// Notify the active callbacks interface (the activity, if the
-		// fragment is attached to one) that an item has been selected.
+	public void onListItemClick(ListView listView, View view, int position, long id) {		
+		showDetails(position);
+	}
+	
+	private void showDetails(int position) {
+		Log.d(TAG, "showDetails position = " + position);
+		if (getListAdapter().getCount() <= 0) {
+			Log.d(TAG, "There is no items.");
+			return;
+		}
 		mActivatedPosition = position;
-		mOnItemSelectedListener.onItemSelected(id);
+		long id = getListAdapter().getItemId(position);
+		if (mDualPane) {
+			// In two-pane mode, show the detail view in this activity by
+			// adding or replacing the detail fragment using a
+			// fragment transaction.
+			mHandler.sendMessage(mHandler.obtainMessage(0, position, 0));
+			Bundle arguments = new Bundle();
+			arguments.putLong(GrammarDetailFragment.ARG_GRAMMAR_ID, id);
+			GrammarDetailFragment fragment = new GrammarDetailFragment();
+			fragment.setArguments(arguments);
+			getFragmentManager().beginTransaction()
+					.replace(R.id.grammar_detail_container, fragment)
+					.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE)
+					.commit();
+
+		} else {
+			// In single-pane mode, simply start the detail activity
+			// for the selected item ID.
+			Intent detailIntent = new Intent(getActivity(), GrammarDetailActivity.class);
+			detailIntent.putExtra(GrammarDetailFragment.ARG_GRAMMAR_ID, id);
+			startActivity(detailIntent);
+		}
 	}
 
 	@Override
@@ -261,13 +291,21 @@ public class GrammarListFragment extends ListFragment {
 		}
 	}
 
-	private void setActivatedPosition(int position) {
-		if (position == ListView.INVALID_POSITION) {
-			getListView().setItemChecked(mActivatedPosition, false);
-		} else {
+	@Override
+	public boolean handleMessage(Message msg) {
+		// TODO Auto-generated method stub
+		switch (msg.what) {
+		case MSG_MOVE_CURRENT_POSITION:
+			int position = msg.arg1;
+			int first = getListView().getFirstVisiblePosition();
+			int last = getListView().getLastVisiblePosition();
+			
 			getListView().setItemChecked(position, true);
+			if (first > position || last < position) {
+				getListView().setSelection(position);
+			}
+			break;
 		}
-
-		mActivatedPosition = position;
+		return true;
 	}
 }

@@ -51,6 +51,7 @@ public class GrammarDetailFragment extends Fragment implements OnInitListener {
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
+		Log.d(TAG, "onCreate()");
 		super.onCreate(savedInstanceState);
 		setHasOptionsMenu(true);
 		
@@ -59,7 +60,7 @@ public class GrammarDetailFragment extends Fragment implements OnInitListener {
 	
 	@Override
 	public void onResume() {
-		// TODO Auto-generated method stub
+		Log.d(TAG, "onResume()");
 		super.onResume();
 		
 		if (getArguments().containsKey(ARG_GRAMMAR_ID)) {
@@ -109,11 +110,13 @@ public class GrammarDetailFragment extends Fragment implements OnInitListener {
 
 	@Override
 	public void onAttach(Activity activity) {
+		Log.d(TAG, "onAttach activity = " + activity);
 		super.onAttach(activity);
 	}
 
 	@Override
 	public void onDetach() {
+		Log.d(TAG, "onDetach()");
 		super.onDetach();
 	}
 	

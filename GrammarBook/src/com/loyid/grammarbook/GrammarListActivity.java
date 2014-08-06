@@ -22,18 +22,9 @@ import android.view.MenuItem;
  * This activity also implements the required {@link GrammarListFragment.Callbacks}
  * interface to listen for item selections.
  */
-public class GrammarListActivity extends Activity implements
-		GrammarListFragment.OnItemSelectedListener {
+public class GrammarListActivity extends Activity {
 	private static final String TAG = "GrammarListActivity";
 	
-	/**
-	 * Whether or not the activity is in two-pane mode, i.e. running on a tablet
-	 * device.
-	 */
-	private boolean mTwoPane;
-	
-	private GrammarListFragment mGrammarListFragment = null; 
-
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		Log.d(TAG, "onCreate()");
@@ -41,33 +32,6 @@ public class GrammarListActivity extends Activity implements
 		setContentView(R.layout.activity_grammar_list);
 		// Show the Up button in the action bar.
 		getActionBar().setDisplayHomeAsUpEnabled(true);
-
-		mGrammarListFragment = (GrammarListFragment) getFragmentManager().findFragmentById(R.id.grammar_list);
-		mGrammarListFragment.setOnItemSelectedListener(this);
-		if (findViewById(R.id.grammar_detail_container) != null) {
-			mTwoPane = true;
-		}
-	}
-
-	@Override
-	protected void onRestart() {
-		// TODO Auto-generated method stub
-		super.onRestart();
-		Log.d(TAG, "onRestart()");
-	}
-
-	@Override
-	protected void onResume() {
-		// TODO Auto-generated method stub
-		super.onResume();
-		Log.d(TAG, "onResume()");
-	}
-
-	@Override
-	protected void onStart() {
-		// TODO Auto-generated method stub
-		super.onStart();
-		Log.d(TAG, "onStart()");
 	}
 
 	@Override
@@ -85,28 +49,5 @@ public class GrammarListActivity extends Activity implements
 			return true;
 		}
 		return super.onOptionsItemSelected(item);
-	}
-
-	@Override
-	public void onItemSelected(long id) {
-		// TODO Auto-generated method stub
-		if (mTwoPane) {
-			// In two-pane mode, show the detail view in this activity by
-			// adding or replacing the detail fragment using a
-			// fragment transaction.
-			Bundle arguments = new Bundle();
-			arguments.putLong(GrammarDetailFragment.ARG_GRAMMAR_ID, id);
-			GrammarDetailFragment fragment = new GrammarDetailFragment();
-			fragment.setArguments(arguments);
-			getFragmentManager().beginTransaction()
-					.replace(R.id.grammar_detail_container, fragment).commit();
-
-		} else {
-			// In single-pane mode, simply start the detail activity
-			// for the selected item ID.
-			Intent detailIntent = new Intent(this, GrammarDetailActivity.class);
-			detailIntent.putExtra(GrammarDetailFragment.ARG_GRAMMAR_ID, id);
-			startActivity(detailIntent);
-		}
 	}
 }
