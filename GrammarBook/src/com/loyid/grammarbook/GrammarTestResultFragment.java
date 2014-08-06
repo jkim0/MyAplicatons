@@ -1,5 +1,7 @@
 package com.loyid.grammarbook;
 
+import com.loyid.grammarbook.GrammarUtils.Question;
+import com.loyid.grammarbook.GrammarUtils.Questions;
 import com.loyid.grammarbook.PrepareTestFragment.OnFragmentInteractionListener;
 
 import android.app.Activity;
@@ -30,9 +32,11 @@ public class GrammarTestResultFragment extends Fragment {
 	public static final String ARG_CORRECT_COUNT = "correct";
 	public static final String ARG_INCORRECT_COUNT = "incorrect";
 	
-	private int mCorrect = 0;
-	private int mIncorrect = 0;
-
+	private TextView mScoreView = null;
+	private TextView mCorrectView = null;
+	private TextView mIncorrectView = null;
+	private TextView mCorrectionView = null;
+	
 	public GrammarTestResultFragment() {
 		// Required empty public constructor
 	}
@@ -40,10 +44,12 @@ public class GrammarTestResultFragment extends Fragment {
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		/*
 		if (getArguments() != null) {
 			mCorrect = getArguments().getInt(ARG_CORRECT_COUNT);
 			mIncorrect = getArguments().getInt(ARG_INCORRECT_COUNT);
 		}
+		*/
 	}
 
 	@Override
@@ -52,14 +58,10 @@ public class GrammarTestResultFragment extends Fragment {
 		// Inflate the layout for this fragment
 		View rootView = inflater.inflate(R.layout.fragment_grammar_test_result,
 				container, false);
-		TextView score = (TextView)rootView.findViewById(R.id.score);
-		TextView correct = (TextView)rootView.findViewById(R.id.correct);
-		TextView incorrect= (TextView)rootView.findViewById(R.id.incorrect);
-		
-		int result = (int)((100 / (mCorrect + mIncorrect)) * mCorrect);
-		score.setText(getString(R.string.label_score) + " : " + result);
-		correct.setText(getString(R.string.label_corrrect) + " : " + mCorrect);
-		incorrect.setText(getString(R.string.label_incorrect) + " : " + mIncorrect);
+		mScoreView = (TextView)rootView.findViewById(R.id.score);
+		mCorrectView = (TextView)rootView.findViewById(R.id.correct);
+		mIncorrectView = (TextView)rootView.findViewById(R.id.incorrect);
+		mCorrectionView = (TextView)rootView.findViewById(R.id.corrections);
 		
 		Button btnOk = (Button)rootView.findViewById(R.id.btn_ok);
 		btnOk.setOnClickListener(new OnClickListener() {
@@ -69,7 +71,63 @@ public class GrammarTestResultFragment extends Fragment {
 				getActivity().finish();
 			}
 		});
+		
+		loadResult();
 		return rootView;
+	}
+	
+	private void loadResult() {
+		GrammarTestActivity activity = (GrammarTestActivity)getActivity();
+		Questions result = activity.getTestResult();
+		
+		int correct = 0;
+		int incorrect = 0;
+		int halfScores = 0;
+		StringBuilder sb = null;
+		for (int i= 0; i < result.mCount; i++) {
+			Question q = result.mQuestions.get(i);
+			if (q.mIsRight) {
+				if (q.mTryCount > 1)
+					halfScores += 1;
+				correct++;
+			} else {
+				if (sb == null)
+					sb = new StringBuilder();
+				
+				sb.append(q.mSubject + "\n");
+				sb.append(" : you answerd\n");
+				
+				
+				for (int j = 0; j < q.mTryCount; j++) {
+					if (result.mTestType == GrammarUtils.TYPE_TEST_OBJECTIVE)
+						sb.append("\t" + q.mExamples.get(q.mObjAnswer.get(j)));
+					else
+						sb.append("\t" + q.mSubjAnswer.get(j));
+					sb.append("\n ");
+				}
+				
+				sb.append(" -> correct answer is\n");
+				for (int k = 0; q.mCorrectAnswer != null && k < q.mCorrectAnswer.size(); k++) {
+					sb.append(q.mExamples.get(q.mCorrectAnswer.get(k)));
+				}
+				
+				for (int h = 0; q.mCorrectAnswerStr != null && h < q.mCorrectAnswerStr.size(); h++) {
+					sb.append(q.mCorrectAnswerStr.get(h));
+				}
+				
+				sb.append("\n\n");
+				
+				incorrect++;
+			}
+		}
+		
+		double e = 100 / result.mCount;
+		double score = (correct - halfScores) * e + halfScores * (e / 2);
+		mScoreView.setText(getString(R.string.label_score) + " : " + score);
+		mCorrectView.setText(getString(R.string.label_corrrect) + " : " + correct);
+		mIncorrectView.setText(getString(R.string.label_incorrect) + " : " + incorrect);
+		if (sb != null)
+			mCorrectionView.setText(sb.toString());
 	}
 	
 	@Override

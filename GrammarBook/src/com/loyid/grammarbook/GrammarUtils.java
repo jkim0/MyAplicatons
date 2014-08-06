@@ -52,6 +52,8 @@ public class GrammarUtils {
 	public static final int DEFAULT_EXAMPLE_COUNT = 4;
 	public static final int DEFAULT_ANSWER_COUNT = 1;
 	
+	public static final int MAX_TRY_COUNT = 2;
+	
 	private static final HashMap<Integer, String> MAP_GRAMMAR_TYPE_TO_STRING = new HashMap<Integer, String> () { 
 		{
 			put(GRAMMAR_TYPE_NOUN, STR_GRAMMAR_TYPE_NOUN);
@@ -178,6 +180,9 @@ public class GrammarUtils {
 		public ArrayList<String> mCorrectAnswerStr = null; // use only subjective question.
 		public ArrayList<Integer> mCorrectAnswer = null; // use only objective question.
 		public boolean mIsRight = false;
+		public int mTryCount = 0;
+		public ArrayList<Integer> mObjAnswer = null;
+		public ArrayList<String> mSubjAnswer = null;
 		
 		public String toString() {
 			StringBuilder sb = new StringBuilder();
@@ -215,6 +220,7 @@ public class GrammarUtils {
 			}
 			
 			sb.append(", isRight = " + mIsRight);
+			sb.append(", tryCount = " + mTryCount);
 			sb.append("}");
 			
 			return sb.toString();

@@ -80,28 +80,40 @@
 	            </RadioGroup>	            	            
 	        </LinearLayout>
 	        
-	        <LinearLayout 
+	        <RelativeLayout 
 	            android:orientation="vertical"
 	            android:id="@+id/subjective_answer_area"
 	            android:layout_marginTop="20dp"
 	            android:layout_width="match_parent"
 	            android:layout_height="wrap_content" >
 	            
+	            <Button 
+			        android:id="@+id/btn_completed"
+			        android:layout_width="wrap_content"
+			        android:layout_height="wrap_content"
+			        android:layout_alignParentRight="true"
+			        android:text="@string/btn_label_completed" />
+	            
 	            <EditText 
 	                android:id="@+id/subjective_answer"
 	                android:layout_width="match_parent"
 	                android:layout_height="wrap_content"
+	                android:layout_toLeftOf="@id/btn_completed"
+	                android:layout_alignParentLeft="true"
 	                android:hint="@string/hint_label_grammar" />
-	            	            
-	        </LinearLayout>
+	            
+	            <TextView 
+	                android:id="@+id/corrections"
+	                android:layout_width="wrap_content"
+	                android:layout_height="wrap_content"
+	                android:layout_below="@id/subjective_answer"
+	                android:layout_alignParentLeft="true"
+	                android:visibility="gone"/>
+	            
+	        </RelativeLayout>
 	        
 	    </LinearLayout>
-	    
-	    <Button 
-	        android:id="@+id/btn_completed"
-	        android:layout_width="wrap_content"
-	        android:layout_height="wrap_content"
-	        android:text="@string/btn_label_completed" />	    
+	    	    
     </LinearLayout>
     
 </ScrollView>

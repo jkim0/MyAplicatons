@@ -62,5 +62,6 @@
     <string name="action_edit">Edit</string>
     <string name="action_add">Add</string>
     <string name="action_detail">Details</string>
+    <string name="msg_incorrect">Incorrect answer. Please try again.</string>
 
 </resources>

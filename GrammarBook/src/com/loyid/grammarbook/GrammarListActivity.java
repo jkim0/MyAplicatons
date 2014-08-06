@@ -45,18 +45,8 @@ public class GrammarListActivity extends Activity implements
 		mGrammarListFragment = (GrammarListFragment) getFragmentManager().findFragmentById(R.id.grammar_list);
 		mGrammarListFragment.setOnItemSelectedListener(this);
 		if (findViewById(R.id.grammar_detail_container) != null) {
-			// The detail container view will be present only in the
-			// large-screen layouts (res/values-large and
-			// res/values-sw600dp). If this view is present, then the
-			// activity should be in two-pane mode.
 			mTwoPane = true;
-
-			// In two-pane mode, list items should be given the
-			// 'activated' state when touched.
-			mGrammarListFragment.setActivateOnItemClick(true);
 		}
-
-		// TODO: If exposing deep links into your app, handle intents here.
 	}
 
 	@Override

@@ -11,6 +11,8 @@ import android.util.Log;
 public class GrammarTestActivity extends Activity implements OnFragmentInteractionListener {
 	private static final String TAG = "GrammarTestActivity";
 
+	private Questions mTestResult = null;
+	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -38,7 +40,9 @@ public class GrammarTestActivity extends Activity implements OnFragmentInteracti
 	@Override
 	public void onTestFinished(Questions questions) {
 		// TODO Auto-generated method stub
+		mTestResult = questions;
 		GrammarTestResultFragment newFragment = new GrammarTestResultFragment();
+		/*
 		Bundle args = new Bundle();
 		
 		int correct = 0;
@@ -54,7 +58,12 @@ public class GrammarTestActivity extends Activity implements OnFragmentInteracti
 		args.putInt(GrammarTestResultFragment.ARG_CORRECT_COUNT, correct);
 		args.putInt(GrammarTestResultFragment.ARG_INCORRECT_COUNT, incorrect);
 		newFragment.setArguments(args);
+		*/
 		getFragmentManager().beginTransaction()
 				.replace(R.id.container, newFragment).commit();
+	}
+	
+	public Questions getTestResult() {
+		return mTestResult;
 	}
 }
