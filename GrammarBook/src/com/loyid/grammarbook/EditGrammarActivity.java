@@ -65,7 +65,7 @@ public class EditGrammarActivity extends ActionBarActivity {
 			@Override
 			public void afterTextChanged(Editable s) {
 				// TODO Auto-generated method stub
-				if (mBtnCheck.isEnabled())
+				if (!mBtnCheck.isEnabled())
 					mBtnCheck.setEnabled(true);
 				mAdapter.getFilter().filter(s.toString());
 			}
@@ -100,24 +100,6 @@ public class EditGrammarActivity extends ActionBarActivity {
 				cursor, new String[] { GrammarProviderContract.Grammars.COLUMN_NAME_GRAMMAR },
 				new int[] { android.R.id.text1 }, CursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER);
 		
-		mAdapter.setFilterQueryProvider(new FilterQueryProvider() {
-			@Override
-			public Cursor runQuery(CharSequence constraint) {
-				String partialValue = constraint.toString().toUpperCase();
-				String projection[] = {
-						GrammarProviderContract.Grammars._ID,
-						GrammarProviderContract.Grammars.COLUMN_NAME_GRAMMAR
-				};
-				
-				Cursor cursor = getContentResolver().query(GrammarProviderContract.Grammars.CONTENT_URI,
-						projection,
-						"UPPER(" + GrammarProviderContract.Grammars.COLUMN_NAME_GRAMMAR + ") GLOB ?",
-						new String[] { partialValue + "*" },
-						GrammarProviderContract.Grammars.DEFAULT_SORT_ORDER);
-				
-				return cursor;
-			}			
-		});
 		edit.setAdapter(mAdapter);
 		
 		mAddedItemList = (LinearLayout)findViewById(R.id.added_item_list);
@@ -150,6 +132,27 @@ public class EditGrammarActivity extends ActionBarActivity {
 			edit.setText(info.mGrammar);
 			edit.setEnabled(false);
 			checkGrammar();
+		} else {
+			int grammarColumnIndex = cursor.getColumnIndex(GrammarProviderContract.Grammars.COLUMN_NAME_GRAMMAR);
+			mAdapter.setStringConversionColumn(grammarColumnIndex);
+			mAdapter.setFilterQueryProvider(new FilterQueryProvider() {
+				@Override
+				public Cursor runQuery(CharSequence constraint) {
+					String partialValue = constraint.toString().toUpperCase();
+					String projection[] = {
+							GrammarProviderContract.Grammars._ID,
+							GrammarProviderContract.Grammars.COLUMN_NAME_GRAMMAR
+					};
+					
+					Cursor cursor = getContentResolver().query(GrammarProviderContract.Grammars.CONTENT_URI,
+							projection,
+							"UPPER(" + GrammarProviderContract.Grammars.COLUMN_NAME_GRAMMAR + ") GLOB ?",
+							new String[] { partialValue + "*" },
+							GrammarProviderContract.Grammars.DEFAULT_SORT_ORDER);
+					
+					return cursor;
+				}
+			});
 		}
 	}	
 
