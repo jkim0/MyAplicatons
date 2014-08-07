@@ -234,7 +234,6 @@ public class GrammarTestFragment extends Fragment implements Callback {
 		if (mTestType == GrammarUtils.TYPE_TEST_OBJECTIVE) {
 			int size = mCurrentQuestion.mCorrectAnswer.size();
 			for (int i = 0; i < size; i++) {
-				Log.e(TAG, "ASDASDFAFDASDFASFD");
 				RadioButton b = (RadioButton)mObjAnswerGroup.getChildAt(mCurrentQuestion.mCorrectAnswer.get(i));
 				b.startAnimation(mBlink);
 			}
@@ -268,7 +267,6 @@ public class GrammarTestFragment extends Fragment implements Callback {
 			ArrayList<String> examples = mCurrentQuestion.mExamples;
 			Log.d(TAG, "moveToNext examples = " + examples + " size = " + examples.size()
 					+ " count = " + mCurrentQuestion.mExampleCount);
-			Log.d(TAG, "wow1");
 			mObjAnswerGroup.clearCheck();
 			for (int i = 0; i < mCurrentQuestion.mExampleCount; i++) {
 				RadioButton btn = (RadioButton)mObjAnswerGroup.getChildAt(i);
@@ -276,7 +274,6 @@ public class GrammarTestFragment extends Fragment implements Callback {
 				btn.setText(examples.get(i));
 				btn.setEnabled(true);
 			}
-			Log.d(TAG, "wow2");
 		} else {
 			mSubjAnswer.setText(null);
 			mCorrections.setVisibility(View.GONE);
