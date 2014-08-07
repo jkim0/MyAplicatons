@@ -234,7 +234,6 @@ public class GrammarTestFragment extends Fragment implements Callback {
 		if (mTestType == GrammarUtils.TYPE_TEST_OBJECTIVE) {
 			int size = mCurrentQuestion.mCorrectAnswer.size();
 			for (int i = 0; i < size; i++) {
-				Log.e(TAG, "ASDASDFAFDASDFASFD");
 				RadioButton b = (RadioButton)mObjAnswerGroup.getChildAt(mCurrentQuestion.mCorrectAnswer.get(i));
 				b.startAnimation(mBlink);
 			}
