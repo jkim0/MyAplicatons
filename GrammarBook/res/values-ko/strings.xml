@@ -63,5 +63,10 @@
     <string name="action_add">추가</string>
     <string name="action_detail">추가정보</string>
     <string name="msg_incorrect">틀렸습니다. 다시 한번 맞춰보세요.</string>
+    <string name="msg_progress_generate_result">결과 분석 중입니다.</string>
+    <string name="section_test_result_number">번호</string>
+    <string name="section_test_result_question">문제</string>
+    <string name="section_test_result_answered">답변</string>
+    <string name="section_test_result_correction">정답</string>
     
 </resources>

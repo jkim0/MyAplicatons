@@ -7,8 +7,6 @@ import android.os.Bundle;
 import android.app.Activity;
 import android.app.Fragment;
 import android.content.Intent;
-import android.speech.tts.TextToSpeech;
-import android.speech.tts.TextToSpeech.OnInitListener;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -19,7 +17,6 @@ import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.loyid.grammarbook.GrammarUtils.Grammar;
 import com.loyid.grammarbook.GrammarUtils.Meaning;
@@ -29,7 +26,7 @@ import com.loyid.grammarbook.GrammarUtils.Meaning;
  * contained in a {@link GrammarListActivity} in two-pane mode (on tablets) or a
  * {@link GrammarDetailActivity} on handsets.
  */
-public class GrammarDetailFragment extends Fragment implements OnInitListener {
+public class GrammarDetailFragment extends Fragment {
 	private static final String TAG = "GrammarDetailFragment";
 	/**
 	 * The fragment argument representing the item ID that this fragment
@@ -39,8 +36,6 @@ public class GrammarDetailFragment extends Fragment implements OnInitListener {
 	
 	private Grammar mGrammarInfo = null;
 	private long mGrammarId = -1;
-	
-	private TextToSpeech mTTS;
 	
 	/**
 	 * Mandatory empty constructor for the fragment manager to instantiate the
@@ -54,8 +49,6 @@ public class GrammarDetailFragment extends Fragment implements OnInitListener {
 		Log.d(TAG, "onCreate()");
 		super.onCreate(savedInstanceState);
 		setHasOptionsMenu(true);
-		
-		mTTS = new TextToSpeech(getActivity(), this);
 	}
 	
 	@Override
@@ -123,9 +116,6 @@ public class GrammarDetailFragment extends Fragment implements OnInitListener {
 	@Override
 	public void onDestroy() {
 		Log.d(TAG, "onDestory()");
-		if (mTTS != null) {
-			mTTS.shutdown();
-		}
 		super.onDestroy();
 	}
 
@@ -197,19 +187,10 @@ public class GrammarDetailFragment extends Fragment implements OnInitListener {
 		btnPlay.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				mTTS.setLanguage(Locale.US);
-				mTTS.speak(mGrammarInfo.mGrammar, TextToSpeech.QUEUE_FLUSH, null);
+				((GrammarBookApplication)getActivity().getApplicationContext()).playTTS(Locale.US, mGrammarInfo.mGrammar);
 			}
 		});
 
 		return rootView;
-	}
-
-	@Override
-	public void onInit(int status) {
-		// TODO Auto-generated method stub
-		boolean isInit = status == TextToSpeech.SUCCESS;
-		int msg = isInit ? R.string.msg_init_tts_success : R.string.msg_init_tts_fail;
-		Toast.makeText(getActivity(), msg, Toast.LENGTH_SHORT).show();
 	}
 }

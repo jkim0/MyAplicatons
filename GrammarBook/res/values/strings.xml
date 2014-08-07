@@ -36,7 +36,7 @@
     <string name="title_activity_grammar_preference">GrammarPreferenceActivity</string>
     <string name="msg_meaning_row_full">Can not add meaning row any more.</string>
     <string name="msg_load_data_done">Data load from File finished.</string>
-    <string name="msg_progress_loading_data">Loading data from files</string>
+    <string name="msg_progress_loading_data">Loading data from files.</string>
     <string name="msg_no_grammar_in_edit">Please input grammar.</string>
     <string name="btn_label_ok">Ok</string>
     <string name="type_label_test_objective">Objective</string>
@@ -63,5 +63,10 @@
     <string name="action_add">Add</string>
     <string name="action_detail">Details</string>
     <string name="msg_incorrect">Incorrect answer. Please try again.</string>
+    <string name="msg_progress_generate_result">Generating results.</string>
+    <string name="section_test_result_number">No.</string>
+    <string name="section_test_result_question">Question</string>
+    <string name="section_test_result_answered">Answerd</string>
+    <string name="section_test_result_correction">Correction</string>
 
 </resources>

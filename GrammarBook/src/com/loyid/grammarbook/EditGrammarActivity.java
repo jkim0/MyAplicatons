@@ -6,8 +6,6 @@ import java.util.Locale;
 import com.loyid.grammarbook.GrammarUtils.Grammar;
 import com.loyid.grammarbook.GrammarUtils.Meaning;
 
-import android.speech.tts.TextToSpeech;
-import android.speech.tts.TextToSpeech.OnInitListener;
 import android.support.v7.app.ActionBarActivity;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -16,6 +14,7 @@ import android.app.Fragment;
 import android.app.FragmentTransaction;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.database.Cursor;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -26,14 +25,18 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.widget.AutoCompleteTextView;
 import android.widget.Button;
+import android.widget.CursorAdapter;
 import android.widget.EditText;
+import android.widget.FilterQueryProvider;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
+import android.widget.SimpleCursorAdapter;
 import android.widget.Spinner;
 import android.widget.Toast;
 
-public class EditGrammarActivity extends ActionBarActivity implements OnInitListener {
+public class EditGrammarActivity extends ActionBarActivity {
 	private static final String TAG = "EditGrammarActivity";
 	private LinearLayout mAddedItemList = null;
 	
@@ -45,25 +48,26 @@ public class EditGrammarActivity extends ActionBarActivity implements OnInitList
 	
 	private static final int MSG_SAVE_GRAMMAR = 0;
 	
-	private TextToSpeech mTTS;
-	
 	private String mCurrentGrammar = null;
 	
 	public static final String EXTRA_GRAMMAR_ID = "grammar_id";
+	
+	private SimpleCursorAdapter mAdapter;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		
 		mHandler = new MessageHandler();
-		mTTS = new TextToSpeech(this, this);
 		setContentView(R.layout.activity_edit_grammar);
-		EditText edit = (EditText)findViewById(R.id.edit_grammar);
+		AutoCompleteTextView edit = (AutoCompleteTextView)findViewById(R.id.edit_grammar);
 		edit.addTextChangedListener(new TextWatcher() {
 			@Override
 			public void afterTextChanged(Editable s) {
 				// TODO Auto-generated method stub
-				mBtnCheck.setEnabled(true);				
+				if (mBtnCheck.isEnabled())
+					mBtnCheck.setEnabled(true);
+				mAdapter.getFilter().filter(s.toString());
 			}
 
 			@Override
@@ -80,6 +84,42 @@ public class EditGrammarActivity extends ActionBarActivity implements OnInitList
 				
 			}
 		});
+		
+		String projection[] = {
+				GrammarProviderContract.Grammars._ID,
+				GrammarProviderContract.Grammars.COLUMN_NAME_GRAMMAR
+		};
+		
+		Cursor cursor = getContentResolver().query(GrammarProviderContract.Grammars.CONTENT_URI,
+				projection,
+				null,
+				null,
+				GrammarProviderContract.Grammars.DEFAULT_SORT_ORDER);
+		
+		mAdapter = new SimpleCursorAdapter(this, android.R.layout.simple_dropdown_item_1line,
+				cursor, new String[] { GrammarProviderContract.Grammars.COLUMN_NAME_GRAMMAR },
+				new int[] { android.R.id.text1 }, CursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER);
+		
+		mAdapter.setFilterQueryProvider(new FilterQueryProvider() {
+			@Override
+			public Cursor runQuery(CharSequence constraint) {
+				String partialValue = constraint.toString().toUpperCase();
+				String projection[] = {
+						GrammarProviderContract.Grammars._ID,
+						GrammarProviderContract.Grammars.COLUMN_NAME_GRAMMAR
+				};
+				
+				Cursor cursor = getContentResolver().query(GrammarProviderContract.Grammars.CONTENT_URI,
+						projection,
+						"UPPER(" + GrammarProviderContract.Grammars.COLUMN_NAME_GRAMMAR + ") GLOB ?",
+						new String[] { partialValue + "*" },
+						GrammarProviderContract.Grammars.DEFAULT_SORT_ORDER);
+				
+				return cursor;
+			}			
+		});
+		edit.setAdapter(mAdapter);
+		
 		mAddedItemList = (LinearLayout)findViewById(R.id.added_item_list);
 		mBtnCheck = (Button)findViewById(R.id.btn_check);
 		mBtnCheck.setOnClickListener(new OnClickListener() {
@@ -96,8 +136,7 @@ public class EditGrammarActivity extends ActionBarActivity implements OnInitList
 				EditText grammar = (EditText)findViewById(R.id.edit_grammar);
 				String strGrammar = grammar.getText().toString().trim();
 				if (strGrammar != null && strGrammar.length() > 0) {
-					mTTS.setLanguage(Locale.US);
-					mTTS.speak(strGrammar, TextToSpeech.QUEUE_FLUSH, null);
+					((GrammarBookApplication)getApplicationContext()).playTTS(Locale.US, strGrammar);
 				}
 			}			
 		});
@@ -303,13 +342,6 @@ public class EditGrammarActivity extends ActionBarActivity implements OnInitList
 			Log.d(TAG, "failed to save grammar in GrammarUtils.addGrammar works");
 		}
 	}
-
-	@Override
-	public void onInit(int status) {
-		boolean isInit = status == TextToSpeech.SUCCESS;
-		int msg = isInit ? R.string.msg_init_tts_success : R.string.msg_init_tts_fail;
-		Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
-	}
 	
 	private class MessageHandler extends Handler {
 		@Override
@@ -321,13 +353,5 @@ public class EditGrammarActivity extends ActionBarActivity implements OnInitList
 			}
 			super.handleMessage(msg);
 		}
-	}
-
-	@Override
-	protected void onDestroy() {
-		if (mTTS != null) {
-			mTTS.shutdown();
-		}
-		super.onDestroy();
 	}
 }

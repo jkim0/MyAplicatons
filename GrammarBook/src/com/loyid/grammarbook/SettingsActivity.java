@@ -387,7 +387,6 @@ public class SettingsActivity extends PreferenceActivity {
 		protected void onPostExecute(Boolean result) {
 			// TODO Auto-generated method stub
 			dismissDialog();
-			Toast.makeText(SettingsActivity.this, R.string.msg_load_data_done, Toast.LENGTH_SHORT).show();
 			super.onPostExecute(result);
 		}
 	}

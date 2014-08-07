@@ -1,6 +1,7 @@
 package com.loyid.grammarbook;
 
 import java.util.ArrayList;
+import java.util.Locale;
 
 import com.loyid.grammarbook.GrammarUtils.Question;
 import com.loyid.grammarbook.GrammarUtils.Questions;
@@ -121,6 +122,18 @@ public class GrammarTestFragment extends Fragment implements Callback {
 		if (mTestType == GrammarUtils.TYPE_TEST_OBJECTIVE) {
 			objectiveArea.setVisibility(View.VISIBLE);
 			subjectiveArea.setVisibility(View.GONE);
+			
+			if (mQuestionType == GrammarUtils.TYPE_QUESTION_MEANING) {
+				Button button = (Button)rootView.findViewById(R.id.btn_play);
+				button.setVisibility(View.VISIBLE);
+				button.setOnClickListener(new OnClickListener() {
+					@Override
+					public void onClick(View v) {
+						((GrammarBookApplication)getActivity().getApplicationContext()).playTTS(Locale.US,
+								mCurrentQuestion.mSubject);
+					}
+				});
+			}
 			RadioGroup answerGroup = (RadioGroup)rootView.findViewById(R.id.objective_answer_group);
 			answerGroup.setOnCheckedChangeListener(new OnCheckedChangeListener() {
 				@Override

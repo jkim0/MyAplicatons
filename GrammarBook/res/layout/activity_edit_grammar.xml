@@ -34,7 +34,7 @@
             android:layout_toLeftOf="@id/btn_check"
             android:text="@string/btn_label_play" />
         
-        <EditText
+        <AutoCompleteTextView
             android:id="@+id/edit_grammar"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
