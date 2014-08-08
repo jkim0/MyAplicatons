@@ -80,6 +80,71 @@ public final class GrammarProviderContract {
 		public static final String SCHEME = "content://";
 	}
 	
+	public static final class TestResult extends GBaseColumns {
+		public static final String TABLE_NAME = "test_results";
+		
+		/*
+		 * Path parts for the URIs
+		 */
+		/**
+		 * Path part for the Meanings URI
+		 */
+		private static final String PATH_MEANING = "/test_results";
+		
+		/**
+		 * Path part for the Meaning ID URI
+		 */
+		private static final String PATH_MEANING_ID = "/test_results/";
+		
+		/**
+		 * 0-relative position of a Meaning ID segment in the path part of a Meaning ID URI
+		 */
+		public static final int MEANING_ID_PATH_POSITION = 1;
+		
+		/**
+		 * The content:// style URL for this table
+		 */
+		public static final Uri CONTENT_URI = Uri.parse(SCHEME + AUTHORITY + PATH_MEANING);
+		
+		/**
+		 * The content URI base for a single meaning. Callers must
+		 * append a numeric meaning id to this URI to retrieve a meaning
+		 */
+		public static final Uri CONTENT_MEANING_ID_URI_BASE = Uri.parse(SCHEME + AUTHORITY + PATH_MEANING_ID);
+		
+		/**
+		 * The content URI match pattern for a single meaning, specified by its ID. Use this to match
+		 * incoming URIs or to construct an Intent.
+		 */
+		public static final Uri CONTENT_MEANING_ID_URI_PATTERN = Uri.parse(SCHEME + AUTHORITY + PATH_MEANING_ID + "/#");
+		
+		public static final String CONTENT_TYPE = "vnd.android.cursor.dir/com.loyid.grammarbook.provider.test_results";
+		
+		public static final String CONTENT_ITEM_TYPE = "vnd.android.cursor.item/com.loyid.grammarbook.provider.test_results";
+		
+		/**
+		 * Column name for the timestamp of test date.
+		 * <P>Type: INTEGER (long from System.curentTimeMillis())</P>
+		 */	
+		public static final String COLUMN_NAME_TEST_DATE = "date";
+		
+		public static final String COLUMN_NAME_TEST_TYPE = "test_type";
+		
+		public static final String COLUMN_NAME_QUESTION_TYPE = "question_type";
+		
+		public static final String COLUMN_NAME_TEST_COUNT = "count";
+		
+		public static final String COLUMN_NAME_TEST_DURATION = "duration";
+		
+		public static final String COLUMN_NAME_EXAMPLE_COUNT = "example_count";
+		
+		public static final String COLUMN_NAME_CORRECT_COUNT = "correct_count";
+		
+		public static final String COLUMN_NAME_INCORRECT_COUNT = "incorrect_count";
+		
+		public static final String COLUMN_NAME_HALF_SCORED_COUNT = "half_scored_count";
+	}
+	
 	public static final class Meanings extends GBaseColumns {
 		public static final String TABLE_NAME = "meanings";		
 		
