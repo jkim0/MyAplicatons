@@ -334,7 +334,9 @@ public class GrammarContentProvider extends ContentProvider {
 	private void updateMeaningInfo(SQLiteDatabase db, long grammarId, String meanings, long timeStamp) {
 		if (meanings != null) {
 			String[] meaningGroup = meanings.split(GrammarUtils.IDENTIFIER_MEANING_GROUP);
+			Log.d(TAG, "meanings = " + meanings);
 			for (int i = 0; i < meaningGroup.length; i++) {
+				Log.d(TAG, "###### meaing = " + meaningGroup[i]);
 				String[] splits = meaningGroup[i].split(GrammarUtils.IDENTIFIER_MEANING);
 				int type = Integer.valueOf(splits[0]);
 				String meaning = splits[1];

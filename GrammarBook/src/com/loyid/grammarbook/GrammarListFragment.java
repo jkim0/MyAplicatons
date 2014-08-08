@@ -76,13 +76,13 @@ public class GrammarListFragment extends ListFragment implements Callback {
 			cache.grammar.setText(grammar);
 			String strMeaning = cursor.getString(cache.meaningColumnIndex);
 			
-			String[] group = strMeaning.split("#");
+			String[] group = strMeaning.split(GrammarUtils.IDENTIFIER_MEANING_GROUP);
 			StringBuilder sb = new StringBuilder();
 			SparseArray<ArrayList<String>> array = new SparseArray<ArrayList<String>>();
 			int size = group.length;
 			ArrayList<String> items;
 			for (int i = 0; i < size; i++) {
-				String[] means = group[i].split("%");
+				String[] means = group[i].split(GrammarUtils.IDENTIFIER_MEANING);
 				int type = Integer.valueOf(means[0]);
 				String mean;
 				if (means.length > 2) {

@@ -38,8 +38,8 @@ public class GrammarUtils {
 	private static final String PREFIX_GRAMMAR_TYPE_PREPOSITION = "!";
 	private static final String PREFIX_GRAMMAR_TYPE_IDIOM = "*";
 	
-	public static final String IDENTIFIER_MEANING_GROUP = "#";
-	public static final String IDENTIFIER_MEANING = "%";
+	public static final String IDENTIFIER_MEANING_GROUP = "¤";
+	public static final String IDENTIFIER_MEANING = "¡";
 	
 	public static final int TYPE_TEST_OBJECTIVE = 0;
 	public static final int TYPE_TEST_SUBJECTIVE = 1;
@@ -299,11 +299,12 @@ public class GrammarUtils {
 		String meaningStr = "";
 		for (int i = 0; i < count; i++) {
 			Meaning m = meanings.get(i);
-			meaningStr += m.mType + "%" + m.mMeaning;
+			meaningStr += m.mType + IDENTIFIER_MEANING + m.mMeaning;
 			if (i < count - 1) {
-				meaningStr += "#";
+				meaningStr += IDENTIFIER_MEANING_GROUP;
 			}			
 		}
+		
 		values.put(GrammarProviderContract.Grammars.COLUMN_NAME_MEANING, meaningStr);
 		if (grammarId < 0 && count > 0) {			
 			context.getContentResolver().insert(GrammarProviderContract.Grammars.CONTENT_URI, values);
