@@ -49,6 +49,7 @@ public class SettingsActivity extends PreferenceActivity {
 	private static final int REQUEST_FILE_SELECT_CODE = 0;
 	
 	private static final int MSG_LOAD_DATA_FROM_FILE = 0;
+	private static final int MSG_EXPORT_DATA_TO_FILE = 1;
 	
 	private MessageHandler mHandler = null;
 
@@ -106,12 +107,21 @@ public class SettingsActivity extends PreferenceActivity {
 		addPreferencesFromResource(R.xml.pref_test);
 		
 		Preference loadData = findPreference("load_data");
+		Preference exportData = findPreference("export_data");
 		Preference reset = findPreference("reset");
 		
 		loadData.setOnPreferenceClickListener(new OnPreferenceClickListener() {
 			@Override
 			public boolean onPreferenceClick(Preference preference) {
 				reloadDataFromFile();
+				return true;
+			}
+		});
+		
+		exportData.setOnPreferenceClickListener(new OnPreferenceClickListener() {
+			@Override
+			public boolean onPreferenceClick(Preference preference) {
+				exportDataToFile();
 				return true;
 			}
 		});
@@ -229,12 +239,21 @@ public class SettingsActivity extends PreferenceActivity {
 			addPreferencesFromResource(R.xml.pref_general);
 			
 			Preference loadData = findPreference("load_data");
+			Preference exportData = findPreference("export_data");
 			Preference reset = findPreference("reset");
 			
 			loadData.setOnPreferenceClickListener(new OnPreferenceClickListener() {
 				@Override
 				public boolean onPreferenceClick(Preference preference) {
-					// TODO Auto-generated method stub
+					//reloadDataFromFile();
+					return false;
+				}
+			});
+			
+			exportData.setOnPreferenceClickListener(new OnPreferenceClickListener() {
+				@Override
+				public boolean onPreferenceClick(Preference preference) {
+					//exportDataFromFile();
 					return false;
 				}
 			});
@@ -312,29 +331,47 @@ public class SettingsActivity extends PreferenceActivity {
 		super.onActivityResult(requestCode, resultCode, data);
 	}
 
-	public void loadDataFromFile(){
+	private void loadDataFromFile(){
 		String fileName= "file:///sdcard/Download/Grammars.txt";
 		Uri fileUri = Uri.parse( fileName );
 		mHandler.sendMessage(mHandler.obtainMessage(MSG_LOAD_DATA_FROM_FILE, fileUri));
 	}
 	
-	public void loadDataFromFile(final Uri fileUri) {
+	private void loadDataFromFile(final Uri fileUri) {
 		Log.d(TAG, "loadDataFromFile uri = " + fileUri);
 		LoadDataAyncTask task = new LoadDataAyncTask();
 		task.execute(fileUri);
 	}
 	
-	public void resetData() {
+	private void exportDataToFile() {
+		String fileName= "file:///sdcard/Download/Grammars1.txt";
+		Uri fileUri = Uri.parse( fileName );
+		mHandler.sendMessage(mHandler.obtainMessage(MSG_EXPORT_DATA_TO_FILE, fileUri));
+	}
+	
+	private void exportDataToFile(final Uri fileUri) {
+		Log.d(TAG, "exportDataToFile uri = " + fileUri);
+		ExportDataAyncTask task = new ExportDataAyncTask();
+		task.execute(fileUri);
+	}
+	
+	private void resetData() {
 	}
 	
 	private class MessageHandler extends Handler {
 		@Override
 		public void handleMessage(Message msg) {
 			switch(msg.what) {
-			case MSG_LOAD_DATA_FROM_FILE:
+			case MSG_LOAD_DATA_FROM_FILE: {
 				Uri fileUri = (Uri)msg.obj;
 				loadDataFromFile(fileUri);
 				break;
+			}
+			case MSG_EXPORT_DATA_TO_FILE: {
+				Uri fileUri = (Uri)msg.obj;
+				exportDataToFile(fileUri);
+				break;
+			}
 			}
 			super.handleMessage(msg);
 		}
@@ -349,10 +386,20 @@ public class SettingsActivity extends PreferenceActivity {
 		
 		ft.addToBackStack(null);
 		
+		String message = null;
+		switch(type) {
+		case 0:
+			message = getString(R.string.msg_progress_loading_data);
+			break;
+		case 1:
+			message = getString(R.string.msg_progress_exporting_data);
+			break;		
+		}
+		
 		// Create and show the dialog.
 		DialogFragment newFragment = GrammarDialogFragment.newInstance(GrammarDialogFragment.DIALOG_TYPE_PROGRESS);
 		Bundle args = newFragment.getArguments();
-		args.putString(GrammarDialogFragment.FRAGMENT_ARGS_MESSAGE, getString(R.string.msg_progress_loading_data));
+		args.putString(GrammarDialogFragment.FRAGMENT_ARGS_MESSAGE, message);
 		newFragment.setCancelable(false);
 		newFragment.show(ft, "dialog");
 	}
@@ -380,6 +427,28 @@ public class SettingsActivity extends PreferenceActivity {
 		@Override
 		protected Boolean doInBackground(Uri... params) {
 			boolean result = GrammarUtils.loadDataFromFile(SettingsActivity.this, params[0], null);
+			return result;
+		}
+
+		@Override
+		protected void onPostExecute(Boolean result) {
+			// TODO Auto-generated method stub
+			dismissDialog();
+			super.onPostExecute(result);
+		}
+	}
+	
+	private class ExportDataAyncTask extends AsyncTask<Uri, Void, Boolean> {
+		@Override
+		protected void onPreExecute() {
+			// TODO Auto-generated method stub
+			showProgressDialog(1);
+			super.onPreExecute();
+		}
+
+		@Override
+		protected Boolean doInBackground(Uri... params) {
+			boolean result = GrammarUtils.exportDataToFile(SettingsActivity.this, params[0], null);
 			return result;
 		}
 

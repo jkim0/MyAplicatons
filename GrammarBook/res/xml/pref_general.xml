@@ -1,6 +1,7 @@
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" >
     
     <Preference android:title="@string/pref_label_load_data" android:key="load_data"/>
+    <Preference android:title="@string/pref_label_export_data" android:key="export_data"/>
     <Preference android:title="@string/pref_label_reset" android:key="reset"/>
 
 </PreferenceScreen>

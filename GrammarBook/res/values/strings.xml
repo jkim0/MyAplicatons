@@ -26,6 +26,7 @@
     <string name="msg_init_tts_success">TTS initializing sucessed</string>
     <string name="msg_init_tts_fail">TTS initializing failed</string>
     <string name="pref_label_load_data">Load grammars from file(*.txt)</string>
+    <string name="pref_label_export_data">Export data to File(grammars.txt)</string>
     <string name="pref_label_reset">Reset grammar data</string>
     <string name="pref_header_label_general">General</string>
     <string name="pref_label_max_meaning_count">Max line count</string>
@@ -36,7 +37,9 @@
     <string name="title_activity_grammar_preference">GrammarPreferenceActivity</string>
     <string name="msg_meaning_row_full">Can not add meaning row any more.</string>
     <string name="msg_load_data_done">Data load from File finished.</string>
-    <string name="msg_progress_loading_data">Loading data from files.</string>
+    <string name="msg_export_data_done">Export Data to File finished.</string>
+    <string name="msg_progress_loading_data">Loading data from file.</string>
+    <string name="msg_progress_exporting_data">Exporting data to file.</string>
     <string name="msg_no_grammar_in_edit">Please input grammar.</string>
     <string name="btn_label_ok">Ok</string>
     <string name="type_label_test_objective">Objective</string>

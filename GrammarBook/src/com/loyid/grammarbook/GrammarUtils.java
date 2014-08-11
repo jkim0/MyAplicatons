@@ -1,10 +1,13 @@
 package com.loyid.grammarbook;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -37,6 +40,9 @@ public class GrammarUtils {
 	private static final String PREFIX_GRAMMAR_TYPE_ADVERB = "%";
 	private static final String PREFIX_GRAMMAR_TYPE_PREPOSITION = "!";
 	private static final String PREFIX_GRAMMAR_TYPE_IDIOM = "*";
+	private static final String PREFIX_MEANING_SEPARATOR = "separator";
+	
+	private static final String DEFAULT_MEANING_SEPARATOR = "|";
 	
 	public static final String IDENTIFIER_MEANING_GROUP = "¤";
 	public static final String IDENTIFIER_MEANING = "¡";
@@ -95,6 +101,17 @@ public class GrammarUtils {
 			put(PREFIX_GRAMMAR_TYPE_ADVERB, STR_GRAMMAR_TYPE_ADVERB);
 			put(PREFIX_GRAMMAR_TYPE_PREPOSITION, STR_GRAMMAR_TYPE_PREPOSITION);
 			put(PREFIX_GRAMMAR_TYPE_IDIOM, STR_GRAMMAR_TYPE_IDIOM);
+		}
+	};
+	
+	private static final HashMap<Integer, String> MAP_GRAMMAR_TYPE_TO_PREFIX = new HashMap<Integer, String> () { 
+		{
+			put(GRAMMAR_TYPE_NOUN, PREFIX_GRAMMAR_TYPE_NOUN);
+			put(GRAMMAR_TYPE_VERB, PREFIX_GRAMMAR_TYPE_VERB);
+			put(GRAMMAR_TYPE_ADJECTIVE, PREFIX_GRAMMAR_TYPE_ADJECTIVE);
+			put(GRAMMAR_TYPE_ADVERB, PREFIX_GRAMMAR_TYPE_ADVERB);
+			put(GRAMMAR_TYPE_PREPOSITION, PREFIX_GRAMMAR_TYPE_PREPOSITION);
+			put(GRAMMAR_TYPE_IDIOM, PREFIX_GRAMMAR_TYPE_IDIOM);
 		}
 	};
 		
@@ -328,11 +345,12 @@ public class GrammarUtils {
 			BufferedReader reader = new BufferedReader(new InputStreamReader(is));
 			boolean grammarStarted = false;
 			boolean headerStarted = false;
+			String separator = DEFAULT_MEANING_SEPARATOR;
 			while(true) {
 				String line = reader.readLine();
 				if (line == null) break;
 				
-				if (line.startsWith("#")) {
+				if (line.contains("######")) {
 					if (headerStarted) {
 						grammarStarted = true;
 					} else {
@@ -346,7 +364,7 @@ public class GrammarUtils {
 					String[] grammarGroup = line.split(":");
 					String grammar = grammarGroup[0];
 					grammarData.mGrammar = grammar;
-					String[] meanings = grammarGroup[1].split(",");
+					String[] meanings = grammarGroup[1].split("[" + separator + "]");
 					Log.d(TAG, "######### grammar = " + grammar);
 					for (int i = 0; i < meanings.length; i++) {
 						String tempMeaning = meanings[i].trim();
@@ -365,9 +383,13 @@ public class GrammarUtils {
 					String[] prefixGroup = line.split(":");
 					String prefix = prefixGroup[0].trim();
 					String kind = prefixGroup[1].trim();
+					if (prefix.equals(PREFIX_MEANING_SEPARATOR)) {
+						separator = kind;
+					}
 					Log.d(TAG, "######## prefix = " + prefix + " kind = " + kind);
 				}
 			}
+			reader.close();
 		} catch (FileNotFoundException e) {
 			Log.e(TAG, "Can not read from file");
 			e.printStackTrace();
@@ -398,6 +420,10 @@ public class GrammarUtils {
 	
 	public static int getGrammarTypeByString(String type) {
 		return MAP_GRAMMAR_STRING_TO_TYPE.get(type.toLowerCase());
+	}
+	
+	public static String getGrammarPrefixByType(int type) {
+		return MAP_GRAMMAR_TYPE_TO_PREFIX.get(type);
 	}
 	
 	public static Grammar getGrammarInfo(Context context, long grammarId) {
@@ -730,5 +756,76 @@ public class GrammarUtils {
 		int count = context.getContentResolver().delete(GrammarProviderContract.Grammars.CONTENT_URI, whereClause, whereArgs);
 		
 		return count > 0 ? true : false;
+	}
+	
+	public static boolean exportDataToFile(Context context, Uri fileUri, Runnable callback) {
+		Log.d(TAG, "exportDataToFile uri = " + fileUri);
+		
+		try {
+			OutputStream os = context.getContentResolver().openOutputStream(fileUri, "w");
+			BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(os));			
+			
+			writer.write("#####################################\n");
+			writer.write(PREFIX_MEANING_SEPARATOR + ":" + DEFAULT_MEANING_SEPARATOR + "\n");
+			writer.write("# : 명사\n");
+			writer.write("@ : 동사\n");
+			writer.write("$ : 형용사\n");
+			writer.write("% : 부사\n");
+			writer.write("! : 전치사\n");
+			writer.write("* : 숙어\n");
+			writer.write("#####################################\n");
+			String[] projection = {
+					GrammarProviderContract.Grammars.COLUMN_NAME_GRAMMAR,
+					GrammarProviderContract.Grammars.COLUMN_NAME_MEANING
+			};
+			
+			Cursor cursor = context.getContentResolver().query(GrammarProviderContract.Grammars.CONTENT_URI,
+					projection, null, null, GrammarProviderContract.Grammars.DEFAULT_SORT_ORDER);
+			
+			if (cursor != null) {
+				if (cursor.moveToFirst()) {
+					for (int i = 0; i < cursor.getCount(); i++) {
+						int grammarColumnIndex = cursor.getColumnIndex(GrammarProviderContract.Grammars.COLUMN_NAME_GRAMMAR);
+						int meaningColumnIndex = cursor.getColumnIndex(GrammarProviderContract.Grammars.COLUMN_NAME_MEANING);
+						
+						StringBuilder sb = new StringBuilder();
+						String grammar = cursor.getString(grammarColumnIndex);
+						String meanings = cursor.getString(meaningColumnIndex);
+						sb.append(grammar + ":");
+						
+						String[] meaningGroup = meanings.split(IDENTIFIER_MEANING_GROUP);
+						int groupSize = meaningGroup.length;
+						for (int j = 0; j < groupSize; j++) {
+							String[] meaning = meaningGroup[j].split(IDENTIFIER_MEANING);
+							String type = getGrammarPrefixByType(Integer.valueOf(meaning[0]));
+							sb.append(type+meaning[1]);
+							if (j < groupSize - 1) {
+								sb.append(DEFAULT_MEANING_SEPARATOR);
+							}
+						}
+						sb.append("\n");
+						writer.write(sb.toString());
+						cursor.moveToNext();
+					}
+				}
+				
+				cursor.close();
+			}
+			
+			writer.close();
+		} catch (FileNotFoundException e) {
+			Log.e(TAG, "Can not read from file");
+			e.printStackTrace();
+			return false;
+		} catch (IOException e) {
+			e.printStackTrace();
+			return false;
+		}
+		
+		if (callback != null) {
+			callback.run();
+		}
+		
+		return true;
 	}
 }

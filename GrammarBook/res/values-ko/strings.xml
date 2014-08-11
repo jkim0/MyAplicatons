@@ -26,6 +26,7 @@
     <string name="msg_init_tts_success">TTS 초기화 성공</string>
     <string name="msg_init_tts_fail">TTS 초기화 실패</string>
     <string name="pref_label_load_data">파일에서 목록 읽어 들이기(*.txt)</string>
+    <string name="pref_label_export_data">파일로 데이터 저장하기(grammars.txt)</string>
     <string name="pref_label_reset">초기화</string>
     <string name="pref_header_label_general">일반</string>
     <string name="pref_label_max_meaning_count">최대 의미 개수</string>
@@ -36,8 +37,10 @@
     <string name="title_activity_grammar_preference">설정</string>
     <string name="msg_meaning_row_full">더 이상 추가 할 수 없습니다.</string>
     <string name="msg_load_data_done">단어 목록 읽어 들이기가 완료되었습니다.</string>
+    <string name="msg_export_data_done">데이터를 파일로 저장하기가 완료되었습니다.</string>
     <string name="msg_progress_loading_data">파일에서 목록 읽어들이는 중입니다.</string>
-    <string name="msg_no_grammar_in_edit">단어를 입력해 주세요.</string>
+    <string name="msg_progress_exporting_data">데이터를 파일로 저장하는 중입니다.</string>
+    <string name="msg_no_grammar_in_edit">단어를 입력해 주세요.</string>    
     <string name="btn_label_ok">확인</string>
     <string name="type_label_test_objective">객관식</string>
     <string name="type_label_test_subjective">주관식</string>
