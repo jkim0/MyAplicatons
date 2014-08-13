@@ -27,6 +27,8 @@ public class GrammarContentProvider extends ContentProvider {
 	public static final int MEANING_ID = 3;
 	public static final int MAPPING = 4;
 	public static final int MAPPING_ID = 5;
+	public static final int TEST_RESULT = 6;
+	public static final int TEST_RESULT_ID = 7;
 	
 	/**
 	 * A UriMatcher instance
@@ -41,6 +43,8 @@ public class GrammarContentProvider extends ContentProvider {
 		sUriMatcher.addURI(GrammarProviderContract.AUTHORITY, GrammarProviderContract.Meanings.TABLE_NAME + "/#", MEANING_ID);
 		sUriMatcher.addURI(GrammarProviderContract.AUTHORITY, GrammarProviderContract.Mappings.TABLE_NAME, MAPPING);
 		sUriMatcher.addURI(GrammarProviderContract.AUTHORITY, GrammarProviderContract.Mappings.TABLE_NAME + "/#", MAPPING_ID);
+		sUriMatcher.addURI(GrammarProviderContract.AUTHORITY, GrammarProviderContract.TestResult.TABLE_NAME, TEST_RESULT);
+		sUriMatcher.addURI(GrammarProviderContract.AUTHORITY, GrammarProviderContract.TestResult.TABLE_NAME + "/#", TEST_RESULT_ID);
 	}
 	
 	public GrammarContentProvider() {
@@ -62,6 +66,16 @@ public class GrammarContentProvider extends ContentProvider {
 				selection += " AND " + GrammarProviderContract.Grammars._ID + " = " + grammarId;
 			}
 			count = db.delete(GrammarProviderContract.Grammars.TABLE_NAME, selection, selectionArgs);
+			break;
+		case TEST_RESULT:
+			count = db.delete(GrammarProviderContract.TestResult.TABLE_NAME, selection, selectionArgs);
+			break;
+		case TEST_RESULT_ID:
+			String resultId = uri.getPathSegments().get(GrammarProviderContract.TestResult.TEST_RESULT_ID_PATH_POSITION);
+			if (selection != null) {
+				selection += " AND " + GrammarProviderContract.TestResult._ID + " = " + resultId;
+			}
+			count = db.delete(GrammarProviderContract.TestResult.TABLE_NAME, selection, selectionArgs);
 			break;
 		default:
 			throw new UnsupportedOperationException("Invalid URI = " + uri);
@@ -86,6 +100,10 @@ public class GrammarContentProvider extends ContentProvider {
 			return GrammarProviderContract.Mappings.CONTENT_TYPE;
 		case MAPPING_ID:
 			return GrammarProviderContract.Mappings.CONTENT_ITEM_TYPE;
+		case TEST_RESULT:
+			return GrammarProviderContract.TestResult.CONTENT_TYPE;
+		case TEST_RESULT_ID:
+			return GrammarProviderContract.TestResult.CONTENT_ITEM_TYPE;
 		default:
 				throw new IllegalArgumentException("Unknown URI = " + uri);
 		}
@@ -143,10 +161,17 @@ public class GrammarContentProvider extends ContentProvider {
 	@Override
 	public Uri insert(Uri uri, ContentValues values) {
 		Log.d(TAG, "insert uri = " + uri + " values = " + values.toString());
-		Uri returnUri;
+		Uri returnUri = null;
 		switch(sUriMatcher.match(uri)) {
 		case GRAMMAR:			
 			returnUri = insertGrammar(uri, values);
+			break;
+		case TEST_RESULT:
+			SQLiteDatabase db = mDBHelper.getWritableDatabase();
+			long rowId = db.insert(GrammarProviderContract.TestResult.TABLE_NAME, null, values);
+			if (rowId > 0) {
+				returnUri = ContentUris.withAppendedId(GrammarProviderContract.TestResult.CONTENT_TEST_RESULT_ID_URI_BASE, rowId);
+			}
 			break;
 		default:
 			throw new UnsupportedOperationException("Invalid URI = " + uri);	

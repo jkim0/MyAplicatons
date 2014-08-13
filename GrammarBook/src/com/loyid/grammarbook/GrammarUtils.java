@@ -2,7 +2,10 @@ package com.loyid.grammarbook;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -11,11 +14,18 @@ import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import org.xmlpull.v1.XmlPullParser;
+import org.xmlpull.v1.XmlPullParserException;
+import org.xmlpull.v1.XmlPullParserFactory;
+import org.xmlpull.v1.XmlSerializer;
+
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.Environment;
 import android.util.Log;
+import android.util.Xml;
 
 public class GrammarUtils {
 	private static final String TAG = "GrammarUtils";
@@ -207,34 +217,43 @@ public class GrammarUtils {
 			sb.append("type = " + mType);
 			sb.append(", Subject = " + mSubject);
 			sb.append(", ExampleCount = " + mExampleCount);
+			sb.append(", mExamples { ");
 			if (mExamples != null) {
-				sb.append(", mExamples { ");
 				for (int i = 0; i < mExamples.size(); i++) {
 					sb.append(mExamples.get(i));
 					if (i < mExamples.size() - 1)
 						sb.append(", ");
 				}
-				sb.append("}");
+			} else {
+				sb.append("no examples");
 			}
+
+			sb.append(" }");
+			
+			sb.append(", mCorrectAnswerStr { ");
 			if (mCorrectAnswerStr != null) {
-				sb.append(", mCorrectAnswerStr { ");
 				for (int i = 0; i < mCorrectAnswerStr.size(); i++) {
 					sb.append(mCorrectAnswerStr.get(i));
 					if (i < mCorrectAnswerStr.size() - 1)
 						sb.append(", ");
 				}
-				sb.append("}");
+			} else {
+				sb.append("no correct answer");
 			}
+
+			sb.append(" }");
 			
+			sb.append(", mCorrectAnswer { ");
 			if (mCorrectAnswer != null) {
-				sb.append(", mCorrectAnswer { ");
 				for (int i = 0; i < mCorrectAnswer.size(); i++) {
 					sb.append(mCorrectAnswer.get(i));
 					if (i < mCorrectAnswer.size() - 1)
 						sb.append(", ");
 				}
-				sb.append("}");
+			} else {
+				sb.append("no answer");
 			}
+			sb.append(" }");
 			
 			sb.append(", isRight = " + mIsRight);
 			sb.append(", tryCount = " + mTryCount);
@@ -247,7 +266,6 @@ public class GrammarUtils {
 	public static class Questions {
 		public int mTestType = -1;
 		public int mQuestionType = -1;
-		public int mScore = 0;
 		public int mCount = 0;
 		public int mSolvedCount = 0;
 		public ArrayList<Question> mQuestions = null;
@@ -257,7 +275,8 @@ public class GrammarUtils {
 			sb.append("Questions : {");
 			sb.append("TestType = " + mTestType);
 			sb.append(", QuestionType = " + mQuestionType);
-			sb.append(", Score = " + mScore);
+			sb.append(", Count = " + mCount);
+			sb.append(", SolvedCount = " + mSolvedCount);
 			if (mQuestions != null) {
 				sb.append(", Questons = {");
 				for (int i = 0; i < mQuestions.size(); i++) {
@@ -270,6 +289,171 @@ public class GrammarUtils {
 			sb.append("}");
 			return sb.toString();
 		}
+		
+		public boolean deleteSavedFile(Context context) {
+			String fileName = getTestFilePath(context, mTestType, mQuestionType);
+			
+			if (fileName == null) {
+				Log.e(TAG, "failed to get dir for data file");
+				return false;
+			}
+			
+			File dataFile = new File(fileName);
+			if (dataFile.exists() && dataFile.delete()) {
+				Log.d(TAG, "data file deleted.");
+			}
+			return true;
+		}
+		
+		public boolean saveToFile(Context context) {
+			String fileName = getTestFilePath(context, mTestType, mQuestionType);
+			
+			if (fileName == null) {
+				Log.e(TAG, "failed to get dir for data file");
+				return false;
+			}
+			
+			File dataFile = new File(fileName);
+			
+			try {
+				dataFile.createNewFile();
+			} catch (IOException ex) {
+				Log.e(TAG, "failed to create data file", ex);
+				return false;
+			}
+			
+			FileOutputStream fos = null;
+			try{
+				fos = new FileOutputStream(dataFile);
+			}catch(FileNotFoundException e){
+				Log.e(TAG, "failed to create file output stream");
+				return false;
+			}
+			
+			XmlSerializer serializer = Xml.newSerializer();
+			try {
+				serializer.setOutput(fos, "UTF-8");
+				serializer.startDocument("UTF-8", true);
+				serializer.setFeature("http://xmlpull.org/v1/doc/features.html#indent-output", true);
+				serializer.startTag(null, "Questions");
+				serializer.attribute(null, "test_type", String.valueOf(mTestType));
+				serializer.attribute(null, "question_type", String.valueOf(mQuestionType));
+				serializer.attribute(null, "count", String.valueOf(mCount));
+				serializer.attribute(null, "solved_count", String.valueOf(mSolvedCount));
+				
+				for (int i = 0; i < mQuestions.size(); i++) {
+					Question question = mQuestions.get(i);
+					serializer.startTag(null, "Question");
+					serializer.attribute(null, "type", String.valueOf(question.mType));
+					serializer.attribute(null, "subject", question.mSubject);
+					serializer.attribute(null, "is_right", String.valueOf(question.mIsRight));
+					serializer.attribute(null, "try_count", String.valueOf(question.mTryCount));
+					
+					int id = 0;
+					if (mTestType == TYPE_TEST_OBJECTIVE) {
+						serializer.startTag(null, "examples");
+						serializer.attribute(null, "example_count", String.valueOf(question.mExampleCount));
+						for (id = 0; id < question.mExampleCount; id++) {
+							serializer.startTag(null, "example");
+							serializer.attribute(null, "data", question.mExamples.get(id));
+							serializer.endTag(null, "example");
+						}
+						serializer.endTag(null, "examples");
+						
+						serializer.startTag(null, "correct_answers");
+						serializer.attribute(null, "count", String.valueOf(question.mCorrectAnswer.size()));
+						for (id = 0; id < question.mCorrectAnswer.size(); id++) {
+							serializer.startTag(null, "answer");
+							serializer.attribute(null, "data", String.valueOf(question.mCorrectAnswer.get(id)));
+							serializer.endTag(null, "answer");
+						}
+						serializer.endTag(null, "correct_answers");
+						
+						serializer.startTag(null, "answers");
+						int answeredCount = question.mObjAnswer == null ? 0 : question.mObjAnswer.size();
+						serializer.attribute(null, "count", String.valueOf(answeredCount));
+						for (id = 0; id < answeredCount; id++) {
+							serializer.startTag(null, "answer");
+							serializer.attribute(null, "data", String.valueOf(question.mObjAnswer.get(id)));
+							serializer.endTag(null, "answer");
+						}
+						serializer.endTag(null, "answers");
+						
+					} else {
+						serializer.startTag(null, "correct_answers");
+						serializer.attribute(null, "count", String.valueOf(question.mCorrectAnswerStr.size()));
+						for (id = 0; id < question.mCorrectAnswerStr.size(); id++) {
+							serializer.startTag(null, "answer");
+							serializer.attribute(null, "data", question.mCorrectAnswerStr.get(id));
+							serializer.endTag(null, "answer");
+						}
+						serializer.endTag(null, "correct_answers");
+						
+						serializer.startTag(null, "answers");
+						int answeredCount = question.mSubjAnswer == null ? 0 : question.mSubjAnswer.size();
+						serializer.attribute(null, "count", String.valueOf(answeredCount));
+						for (id = 0; id < answeredCount; id++) {
+							serializer.startTag(null, "answer");
+							serializer.attribute(null, "data", question.mSubjAnswer.get(id));
+							serializer.endTag(null, "answer");
+						}
+						serializer.endTag(null, "answers");
+					}
+					
+					serializer.endTag(null, "Question");
+				}
+				serializer.endTag(null, "Questions");
+				serializer.endDocument();
+				serializer.flush();				
+			} catch (Exception ex) {
+				Log.e(TAG, "failed to data serialize", ex);
+				return false;
+			}
+			
+			try {
+				if (fos != null)
+					fos.close();
+			} catch (IOException ex) {
+				Log.d(TAG, "failed to close file output stream");
+			}
+			
+			return true;
+		}
+	}
+	
+	public static String getTestDirPath(Context context) {
+		String dirPath = context.getFilesDir().getAbsolutePath() + "/tests";
+		File dir = new File(dirPath);
+		if( !dir.exists() && !dir.mkdirs()) {
+			Log.e(TAG, "failed to make dir for data file");
+			return null;
+		}
+		
+		return dirPath;
+	}
+	
+	public static String getTestFilePath(Context context, int testType, int questionType) {
+		String dirPath = getTestDirPath(context);
+		if( dirPath == null) {
+			Log.e(TAG, "failed to get dir for data file");
+			return null;
+		}
+		
+		String filename = "test";
+		if (testType == TYPE_TEST_OBJECTIVE) {
+			filename += "_objective";
+			if (questionType == TYPE_QUESTION_MEANING) {
+				filename += "_meaning";
+			} else {
+				filename += "_grammar";
+			}
+		} else {
+			filename += "_subjetive";
+		}
+		
+		String fileName = dirPath + "/" + filename + ".xml";
+		
+		return fileName;
 	}
 	
 	public static long getGrammarId(Context context, String strGrammar) {
@@ -476,6 +660,158 @@ public class GrammarUtils {
 		return grammarInfo;
 	}
 	
+	private static ArrayList<String> readExample(XmlPullParser parser) throws XmlPullParserException, IOException {
+		parser.require(XmlPullParser.START_TAG, null, "examples");
+		ArrayList<String> examples = new ArrayList<String>();
+		
+		int exampleCount = Integer.valueOf(parser.getAttributeValue(null, "example_count"));
+		
+		while (parser.next() != XmlPullParser.END_TAG) {
+			if (parser.getEventType() != XmlPullParser.START_TAG) {
+	            continue;
+	        }			
+			
+			parser.require(XmlPullParser.START_TAG, null, "example");
+			String e = parser.getAttributeValue(null, "data");
+			examples.add(parser.getAttributeValue(null, "data"));
+			parser.nextTag();
+			parser.require(XmlPullParser.END_TAG, null, "example");
+		}
+		parser.require(XmlPullParser.END_TAG, null, "examples");
+		
+		return examples;
+	}
+	
+	private static ArrayList<Integer> readObjectAnswerList(XmlPullParser parser, String name) throws XmlPullParserException, IOException {
+		parser.require(XmlPullParser.START_TAG, null, name);
+		ArrayList<Integer> list = new ArrayList<Integer>();
+		
+		int count = Integer.valueOf(parser.getAttributeValue(null, "count"));
+		
+		while (parser.next() != XmlPullParser.END_TAG) {
+			if (parser.getEventType() != XmlPullParser.START_TAG) {
+	            continue;
+	        }			
+			
+			parser.require(XmlPullParser.START_TAG, null, "answer");
+			list.add(Integer.valueOf(parser.getAttributeValue(null, "data")));
+			parser.nextTag();
+			parser.require(XmlPullParser.END_TAG, null, "answer");
+		}
+		parser.require(XmlPullParser.END_TAG, null, name);
+		
+		return list;
+	}
+	
+	private static ArrayList<String> readSubjectAnswerList(XmlPullParser parser, String name) throws XmlPullParserException, IOException {
+		parser.require(XmlPullParser.START_TAG, null, name);
+		ArrayList<String> list = new ArrayList<String>();
+		
+		int count = Integer.valueOf(parser.getAttributeValue(null, "count"));
+		
+		while (parser.next() != XmlPullParser.END_TAG) {
+			if (parser.getEventType() != XmlPullParser.START_TAG) {
+	            continue;
+	        }			
+			
+			parser.require(XmlPullParser.START_TAG, null, "answer");
+			list.add(parser.getAttributeValue(null, "data"));
+			parser.nextTag();
+			parser.require(XmlPullParser.END_TAG, null, "answer");
+		}
+		parser.require(XmlPullParser.END_TAG, null, name);
+		
+		return list;
+	}
+	
+	private static Question readQuestion(XmlPullParser parser, int testType) throws XmlPullParserException, IOException {
+		parser.require(XmlPullParser.START_TAG, null, "Question");
+		Question question = new Question();
+		
+		question.mType = Integer.valueOf(parser.getAttributeValue(null, "type"));
+		question.mSubject = parser.getAttributeValue(null, "subject");
+		question.mIsRight = Boolean.valueOf(parser.getAttributeValue(null, "is_right"));
+		question.mTryCount = Integer.valueOf(parser.getAttributeValue(null, "try_count"));
+		Log.d(TAG, "name = " + parser.getName() + " type = " + question.mType + " subject = " + question.mSubject
+				+ " isRight = " + question.mIsRight + " tryCount = " + question.mTryCount);
+		
+		while (parser.next() != XmlPullParser.END_TAG) {
+			if (parser.getEventType() != XmlPullParser.START_TAG) {
+	            continue;
+	        }
+			
+			String name = parser.getName();
+			
+			if (name.equals("examples")) {
+				question.mExamples = readExample(parser);
+				question.mExampleCount = question.mExamples.size();
+			} else if (name.equals("correct_answers")) {
+				if (testType == TYPE_TEST_OBJECTIVE) {
+					question.mCorrectAnswer = readObjectAnswerList(parser, name);
+				} else {
+					question.mCorrectAnswerStr = readSubjectAnswerList(parser, name);
+				}
+			} else if (name.equals("answers")) {
+				if (testType == TYPE_TEST_OBJECTIVE) {
+					question.mObjAnswer = readObjectAnswerList(parser, name);
+				} else {
+					question.mSubjAnswer = readSubjectAnswerList(parser, name);
+				}				
+			}
+		}
+		Log.d(TAG, "question = " + question);
+		parser.require(XmlPullParser.END_TAG, null, "Question");
+		return question;
+	}
+	
+	private static Questions readQuestions(XmlPullParser parser) throws XmlPullParserException, IOException {
+		Questions questions = new Questions();
+		
+		parser.require(XmlPullParser.START_TAG, null, "Questions");
+		questions.mTestType = Integer.valueOf(parser.getAttributeValue(null, "test_type"));
+		questions.mQuestionType = Integer.valueOf(parser.getAttributeValue(null, "question_type"));
+		questions.mCount = Integer.valueOf(parser.getAttributeValue(null, "count"));
+		questions.mSolvedCount = Integer.valueOf(parser.getAttributeValue(null, "solved_count"));
+		Log.d(TAG, "name = " + parser.getName() + " testType = " + questions.mTestType + " questionType = " + questions.mQuestionType
+				+ " count = " + questions.mCount + " solved count = " + questions.mSolvedCount);
+		questions.mQuestions = new ArrayList<Question>();
+		while (parser.next() != XmlPullParser.END_TAG) {
+			if (parser.getEventType() != XmlPullParser.START_TAG) {
+	            continue;
+	        }
+			
+			String name = parser.getName();
+			if (name.equals("Question")) {
+				questions.mQuestions.add(readQuestion(parser, questions.mTestType));
+			}
+		}
+		
+		return questions;
+	}
+	
+	public static Questions generateTestSourceFromFile(Context context, int testType, int questionType) {
+		Log.e(TAG, "generateTestSourceFromFile testType = " + testType + " questionType = " + questionType);
+		String filename = getTestFilePath(context, testType, questionType);
+		try {
+			XmlPullParser parser = Xml.newPullParser();
+			File dataFile = new File(filename);
+			if (!dataFile.exists()) {
+				Log.e(TAG, "there is no Test file(" + filename + ")");
+				return null;
+			}
+			
+			FileInputStream fis = new FileInputStream(filename);
+			parser.setInput(fis, "UTF-8");
+			parser.nextTag();
+			
+			return readQuestions(parser);
+			
+		} catch (Exception ex) {
+			Log.e(TAG, "failed to data from test file");
+			
+		}
+		return null;
+	}
 	public static Questions generateTestSource(Context context, int testType, int questionType,
 			int questionCount, int exampleCount, int answerCount) {
 		Log.e(TAG, "generateTestSource testType = " + testType + " questionType = " + questionType + " questionCount = " + questionCount
@@ -827,5 +1163,31 @@ public class GrammarUtils {
 		}
 		
 		return true;
+	}
+	
+	public static void deleteSavedTestFiles(Context context, boolean subj, boolean obj) {
+		String objMeanFile = getTestFilePath(context, TYPE_TEST_OBJECTIVE, TYPE_QUESTION_MEANING);
+		String objGrammarFile = getTestFilePath(context, TYPE_TEST_OBJECTIVE, TYPE_QUESTION_GRAMMAR);
+		String subjFile = getTestFilePath(context, TYPE_TEST_SUBJECTIVE, -1);
+		
+		File f = null;
+		if (obj) {
+			f = new File(objMeanFile);
+			if (f.exists() && f.delete()) {
+				Log.d(TAG, "delete file = " + objMeanFile);
+			}
+			
+			f = new File(objGrammarFile);
+			if (f.exists() && f.delete()) {
+				Log.d(TAG, "delete file = " + objGrammarFile);
+			}
+		}
+		
+		if (subj) {
+			f = new File(subjFile);
+			if (f.exists() && f.delete()) {
+				Log.d(TAG, "delete file = " + subjFile);
+			}
+		}
 	}
 }

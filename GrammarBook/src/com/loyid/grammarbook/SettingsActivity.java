@@ -190,7 +190,16 @@ public class SettingsActivity extends PreferenceActivity {
 				// the preference's 'entries' list.
 				ListPreference listPreference = (ListPreference) preference;
 				int index = listPreference.findIndexOfValue(stringValue);
-
+				
+				if (preference.getSummary() != null) {
+					String key = preference.getKey();
+					boolean testCountChanged = key.equals("test_count");
+					boolean exampleCountChanged = key.equals("test_example_count");
+					if (testCountChanged || exampleCountChanged) {
+						GrammarUtils.deleteSavedTestFiles(preference.getContext(), testCountChanged, exampleCountChanged);
+					}
+				}				
+				
 				// Set the summary to reflect the new value.
 				preference
 						.setSummary(index >= 0 ? listPreference.getEntries()[index]
@@ -312,12 +321,12 @@ public class SettingsActivity extends PreferenceActivity {
 	}
 	
 	public void reloadDataFromFile() {
-		//loadDataFromFile();
+		loadDataFromFile();
 		Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
 		intent.addCategory(Intent.CATEGORY_OPENABLE);
 		intent.setType("*/*");
 		
-		this.startActivityForResult(intent, REQUEST_FILE_SELECT_CODE);
+		//this.startActivityForResult(intent, REQUEST_FILE_SELECT_CODE);
 	}
 	
 	@Override

@@ -49,6 +49,19 @@ public class DatabaseHelper extends SQLiteOpenHelper
 				+ GrammarProviderContract.Mappings.COLUMN_NAME_MEANING_ID + " INTEGER"
 				+ ");");
 		
+		db.execSQL("CREATE TABLE " + GrammarProviderContract.TestResult.TABLE_NAME + " ("
+				+ GrammarProviderContract.TestResult._ID + " INTEGER PRIMARY KEY,"
+				+ GrammarProviderContract.TestResult.COLUMN_NAME_TEST_TYPE + " INTEGER DEFAULT 0,"
+				+ GrammarProviderContract.TestResult.COLUMN_NAME_QUESTION_TYPE + " INTEGER DEFAULT 0,"
+				+ GrammarProviderContract.TestResult.COLUMN_NAME_TEST_COUNT + " INTEGER DEFAULT 0,"
+				+ GrammarProviderContract.TestResult.COLUMN_NAME_TEST_DURATION + " INTEGER DEFAULT 0,"
+				+ GrammarProviderContract.TestResult.COLUMN_NAME_CORRECT_COUNT + " INTEGER DEFAULT 0,"
+				+ GrammarProviderContract.TestResult.COLUMN_NAME_INCORRECT_COUNT + " INTEGER DEFAULT 0,"
+				+ GrammarProviderContract.TestResult.COLUMN_NAME_HALF_SCORE_COUNT + " INTEGER DEFAULT 0,"
+				+ GrammarProviderContract.TestResult.COLUMN_NAME_CORRECTION_FILE_PATH + " TEXT NOT NULL,"
+				+ GrammarProviderContract.TestResult.COLUMN_NAME_COMPLETED_DATE + " INTEGER"
+				+ ");");
+		
 		db.execSQL("CREATE TRIGGER IF NOT EXISTS decrease_meaning_refer_mount AFTER DELETE on "
 				+ GrammarProviderContract.Mappings.TABLE_NAME + " "
 				+ "BEGIN "
@@ -85,6 +98,7 @@ public class DatabaseHelper extends SQLiteOpenHelper
 		db.execSQL("DROP TABLE IF EXISTS " + GrammarProviderContract.Grammars.TABLE_NAME);
 		db.execSQL("DROP TABLE IF EXISTS " + GrammarProviderContract.Meanings.TABLE_NAME);
 		db.execSQL("DROP TABLE IF EXISTS " + GrammarProviderContract.Mappings.TABLE_NAME);
+		db.execSQL("DROP TABLE IF EXISTS " + GrammarProviderContract.TestResult.TABLE_NAME);
 		db.execSQL("DROP TABLE IF EXISTS decrease_meaning_refer_mount");
 		db.execSQL("DROP TABLE IF EXISTS increase_meaning_refer_mount");
 		db.execSQL("DROP TABLE IF EXISTS update_mapping_after_delete");

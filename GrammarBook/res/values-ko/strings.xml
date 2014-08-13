@@ -71,5 +71,8 @@
     <string name="section_test_result_question">문제</string>
     <string name="section_test_result_answered">답변</string>
     <string name="section_test_result_correction">정답</string>
+    <string name="msg_use_saved_dialog">완료되지 않은 테스트가 있습니다.\n계속 하시겠습니까?</string>
+    <string name="btn_label_yes">예</string>
+    <string name="btn_label_no">아니오</string>
     
 </resources>

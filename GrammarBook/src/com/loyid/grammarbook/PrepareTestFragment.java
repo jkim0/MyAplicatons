@@ -1,11 +1,16 @@
 package com.loyid.grammarbook;
 
+import java.io.File;
+
 import com.loyid.grammarbook.GrammarUtils.Questions;
 
 import android.app.Activity;
+import android.app.DialogFragment;
+import android.app.FragmentTransaction;
 import android.os.Bundle;
 import android.preference.PreferenceActivity;
 import android.app.Fragment;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -120,12 +125,54 @@ public class PrepareTestFragment extends Fragment {
 		btnStart.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				if (mListener != null) {
-					mListener.onTestStarted(mSelectedTestType, mSelectedQuestionType);
-				}
+				checkBeforeStartTest();
 			}
 		});
 		return rootView;
+	}
+	
+	private void checkBeforeStartTest() {
+		String filename = GrammarUtils.getTestFilePath(getActivity(), mSelectedTestType, mSelectedQuestionType);
+		File file = new File(filename);
+		if (file.exists()) {
+			showConfirmDialog();
+			return;
+		}
+		
+		startTest(false);
+	}
+	
+	private void startTest(boolean useSaved) {
+		if (mListener != null) {
+			mListener.onTestStarted(mSelectedTestType, mSelectedQuestionType, useSaved);
+		}
+	}
+	
+	private void showConfirmDialog() {
+		FragmentTransaction ft = getFragmentManager().beginTransaction();
+		Fragment prev = getFragmentManager().findFragmentByTag("dialog");
+		if (prev != null) {
+			ft.remove(prev);
+		}
+		
+		ft.addToBackStack(null);
+		
+		// Create and show the dialog.
+		GrammarDialogFragment newFragment = GrammarDialogFragment.newInstance(GrammarDialogFragment.DIALOG_TYPE_YES_NO);
+		newFragment.setOnClickListener(new DialogInterface.OnClickListener() {
+			@Override
+			public void onClick(DialogInterface dialog, int which) {
+				if (which == DialogInterface.BUTTON_POSITIVE) {
+					startTest(true);
+				} else {
+					startTest(false);
+				}				
+			}			
+		});
+		Bundle args = newFragment.getArguments();
+		args.putString(GrammarDialogFragment.FRAGMENT_ARGS_MESSAGE, getString(R.string.msg_use_saved_dialog));
+		newFragment.setCancelable(false);
+		newFragment.show(ft, "dialog");
 	}
 	
 	@Override
@@ -146,7 +193,7 @@ public class PrepareTestFragment extends Fragment {
 	}
 	
 	public interface OnFragmentInteractionListener {
-		public void onTestStarted(int testType, int questionType);
+		public void onTestStarted(int testType, int questionType, boolean useSaved);
 		public void onTestFinished(Questions question);
 	}
 

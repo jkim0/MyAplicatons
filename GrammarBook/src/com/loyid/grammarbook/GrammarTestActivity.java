@@ -25,13 +25,14 @@ public class GrammarTestActivity extends Activity implements OnFragmentInteracti
 	}
 
 	@Override
-	public void onTestStarted(int testType, int questionType) {
+	public void onTestStarted(int testType, int questionType, boolean useSaved) {
 		// TODO Auto-generated method stub
-		Log.d(TAG, "onStartTest testType = " + testType + " qustionType = " + questionType);
+		Log.d(TAG, "onStartTest testType = " + testType + " qustionType = " + questionType + " useSaved = " + useSaved);
 		GrammarTestFragment newFragment = new GrammarTestFragment();
 		Bundle args = new Bundle();
 		args.putInt(GrammarTestFragment.ARG_TEST_TYPE, testType);
 		args.putInt(GrammarTestFragment.ARG_QUESTION_TYPE, questionType);
+		args.putBoolean(GrammarTestFragment.ARG_USE_SAVED, useSaved);
 		newFragment.setArguments(args);
 		getFragmentManager().beginTransaction()
 				.replace(R.id.container, newFragment).commit();
@@ -42,23 +43,6 @@ public class GrammarTestActivity extends Activity implements OnFragmentInteracti
 		// TODO Auto-generated method stub
 		mTestResult = questions;
 		GrammarTestResultFragment newFragment = new GrammarTestResultFragment();
-		/*
-		Bundle args = new Bundle();
-		
-		int correct = 0;
-		int incorrect = 0;
-		for (int i= 0; i < questions.mCount; i++) {
-			Question q = questions.mQuestions.get(i);
-			if (q.mIsRight) {
-				correct++;
-			} else {
-				incorrect++;
-			}
-		}
-		args.putInt(GrammarTestResultFragment.ARG_CORRECT_COUNT, correct);
-		args.putInt(GrammarTestResultFragment.ARG_INCORRECT_COUNT, incorrect);
-		newFragment.setArguments(args);
-		*/
 		getFragmentManager().beginTransaction()
 				.replace(R.id.container, newFragment).commit();
 	}

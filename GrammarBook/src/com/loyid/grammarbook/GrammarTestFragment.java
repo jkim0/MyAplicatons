@@ -45,6 +45,7 @@ public class GrammarTestFragment extends Fragment implements Callback {
 	
 	public static final String ARG_TEST_TYPE = "test_type";
 	public static final String ARG_QUESTION_TYPE = "question_type";
+	public static final String ARG_USE_SAVED = "use_saved";
 	
 	private int mTestType = GrammarUtils.TYPE_TEST_OBJECTIVE;
 	private int mQuestionType = GrammarUtils.TYPE_QUESTION_MEANING;
@@ -103,13 +104,15 @@ public class GrammarTestFragment extends Fragment implements Callback {
 		mQuestionCount = Integer.valueOf(prefs.getString("test_count", String.valueOf(GrammarUtils.DEFAULT_TEST_COUNT)));
 		mExampleCount = Integer.valueOf(prefs.getString("test_example_count", String.valueOf(GrammarUtils.DEFAULT_EXAMPLE_COUNT)));
 		
+		boolean useSaved = false;
 		if (getArguments() != null) {
 			mTestType = getArguments().getInt(ARG_TEST_TYPE);
 			mQuestionType = getArguments().getInt(ARG_QUESTION_TYPE);
+			useSaved = getArguments().getBoolean(ARG_USE_SAVED);
 		}
 		
 		Log.e(TAG, "mQuestionCount = " + mQuestionCount);
-		generateTestSource();
+		generateTestSource(useSaved);
 	}
 
 	@Override
@@ -186,6 +189,13 @@ public class GrammarTestFragment extends Fragment implements Callback {
 	@Override
 	public void onDetach() {
 		super.onDetach();
+		if (mQuestions != null) {
+			if (mQuestions.mCount == mQuestions.mSolvedCount) {
+				mQuestions.deleteSavedFile(getActivity());
+			} else {
+				mQuestions.saveToFile(getActivity());
+			}
+		}
 		mListener = null;
 	}
 	
@@ -231,6 +241,9 @@ public class GrammarTestFragment extends Fragment implements Callback {
 			String answer = mSubjAnswer.getText().toString().trim();
 			mCurrentQuestion.mSubjAnswer.add(answer);
 			right = mCurrentQuestion.mCorrectAnswerStr.contains(answer);
+			if (!right) {
+				mSubjAnswer.setText("");
+			}
 		}
 		mCurrentQuestion.mIsRight = right;
 		
@@ -293,10 +306,16 @@ public class GrammarTestFragment extends Fragment implements Callback {
 		}
 	}
 	
-	private void generateTestSource() {
-		GenerateTestAyncTask loader = new GenerateTestAyncTask();
-		Log.e(TAG, "mQuestionCount = " + mQuestionCount);
-		loader.execute(mTestType, mQuestionType, mQuestionCount, mExampleCount, mAnswerCount);
+	private void generateTestSource(boolean useSaved) {
+		if (useSaved) {
+			GenerateTestFromFileAyncTask loader = new GenerateTestFromFileAyncTask();
+			Log.e(TAG, "mQuestionCount = " + mQuestionCount);
+			loader.execute(mTestType, mQuestionType);
+		} else {
+			GenerateTestAyncTask loader = new GenerateTestAyncTask();
+			Log.e(TAG, "mQuestionCount = " + mQuestionCount);
+			loader.execute(mTestType, mQuestionType, mQuestionCount, mExampleCount, mAnswerCount);
+		}
 	}
 	
 	private void onGenerateCompleted(Questions questions) {
@@ -323,6 +342,7 @@ public class GrammarTestFragment extends Fragment implements Callback {
 		protected Questions doInBackground(Integer... params) {
 			Questions questions = GrammarUtils.generateTestSource(getActivity(), params[0],
 					params[1], params[2], params[3], params[4]);
+			questions.saveToFile(getActivity());
 			return questions;
 		}
 
@@ -330,8 +350,29 @@ public class GrammarTestFragment extends Fragment implements Callback {
 		protected void onPostExecute(Questions result) {
 			// TODO Auto-generated method stub
 			super.onPostExecute(result);
-			onGenerateCompleted(result);
-			
+			onGenerateCompleted(result);			
+		}
+	}
+	
+	private class GenerateTestFromFileAyncTask extends AsyncTask<Integer, Void, Questions> {
+		@Override
+		protected void onPreExecute() {
+			// TODO Auto-generated method stub
+			super.onPreExecute();
+		}
+
+		@Override
+		protected Questions doInBackground(Integer... params) {
+			Questions questions = GrammarUtils.generateTestSourceFromFile(getActivity(), params[0],
+					params[1]);
+			return questions;
+		}
+
+		@Override
+		protected void onPostExecute(Questions result) {
+			// TODO Auto-generated method stub
+			super.onPostExecute(result);
+			onGenerateCompleted(result);			
 		}
 	}
 

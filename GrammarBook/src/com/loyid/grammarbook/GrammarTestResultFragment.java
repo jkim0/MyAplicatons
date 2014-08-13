@@ -1,7 +1,13 @@
 package com.loyid.grammarbook;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+
+import org.xmlpull.v1.XmlSerializer;
 
 import com.loyid.grammarbook.GrammarUtils.Question;
 import com.loyid.grammarbook.GrammarUtils.Questions;
@@ -14,7 +20,11 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.app.Fragment;
+import android.content.ContentValues;
 import android.content.Context;
+import android.database.Cursor;
+import android.util.Log;
+import android.util.Xml;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -96,7 +106,9 @@ public class GrammarTestResultFragment extends Fragment {
 
 		@Override
 		protected Results doInBackground(Questions... params) {
-			return getTestResults(params[0]);
+			Results result = getTestResults(params[0]);
+			result.saveToDatabase(getActivity());
+			return result;
 		}
 
 		@Override
@@ -119,7 +131,7 @@ public class GrammarTestResultFragment extends Fragment {
 		int incorrectCount = 0;
 		int halfScoredCount = 0;		
 		
-		ArrayList<Corrections> corrections = new ArrayList<Corrections>();
+		ArrayList<Correction> corrections = new ArrayList<Correction>();
 		
 		for (int i= 0; i < questions.mCount; i++) {
 			Question q = questions.mQuestions.get(i);
@@ -128,7 +140,7 @@ public class GrammarTestResultFragment extends Fragment {
 					halfScoredCount += 1;
 				correctCount++;
 			} else {
-				Corrections c = new Corrections();
+				Correction c = new Correction();
 				c.mNumber = i + 1;
 				c.mSubject = q.mSubject;
 				
@@ -172,15 +184,17 @@ public class GrammarTestResultFragment extends Fragment {
 		result.mTotalCount = questions.mCount;
 		result.mCorrectCount = correctCount;
 		result.mIncorrectCount = incorrectCount;
-		result.mHalfScroedCount = halfScoredCount;
+		result.mHalfScoreCount = halfScoredCount;
 		result.mCorrections = corrections;
+		Long now = Long.valueOf(System.currentTimeMillis());
+		result.mCompletedDate =  now;
 		
 		return result;
 	}
 	
 	private void displayTestResults(Results results) {
 		double e = 100 / results.mTotalCount;
-		double score = (results.mCorrectCount - results.mHalfScroedCount) * e + results.mHalfScroedCount * (e / 2);
+		double score = (results.mCorrectCount - results.mHalfScoreCount) * e + results.mHalfScoreCount * (e / 2);
 		mScoreView.setText(getString(R.string.label_score) + " : " + score);
 		mCorrectView.setText(getString(R.string.label_corrrect) + " : " + results.mCorrectCount);
 		mIncorrectView.setText(getString(R.string.label_incorrect) + " : " + results.mIncorrectCount);
@@ -195,11 +209,11 @@ public class GrammarTestResultFragment extends Fragment {
 	}
 	
 	private class CorrectionsArrayAdapter extends BaseAdapter {
-		private ArrayList<Corrections> mCorrections;
+		private ArrayList<Correction> mCorrections;
 		private LayoutInflater mInflater;
 		private int mResId;
 		
-		private CorrectionsArrayAdapter(Context context, int resId, ArrayList<Corrections> corrections) {
+		private CorrectionsArrayAdapter(Context context, int resId, ArrayList<Correction> corrections) {
 			mCorrections = corrections;
 			mResId = resId;
 			mInflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
@@ -243,7 +257,7 @@ public class GrammarTestResultFragment extends Fragment {
 		
 		private void bindView(int position, View view) {
 			ViewHolder holder = (ViewHolder)view.getTag();
-			Corrections c = mCorrections.get(position);
+			Correction c = mCorrections.get(position);
 			holder.mNumber.setText("" + c.mNumber);
 			holder.mQuestion.setText(c.mSubject);
 			holder.mAnswered.setText(c.mAnswered);
@@ -287,7 +301,7 @@ public class GrammarTestResultFragment extends Fragment {
 		ft.addToBackStack(null);
 	}
 	
-	private class Corrections {
+	private class Correction {
 		public int mNumber;
 		public String mSubject;
 		public String mAnswered;
@@ -295,11 +309,102 @@ public class GrammarTestResultFragment extends Fragment {
 	}
 	
 	private class Results {
+		public int mTestType;
+		public int mQuestionType;
 		public int mTotalCount;
 		public int mCorrectCount;
 		public int mIncorrectCount;
-		public int mHalfScroedCount;
-		public ArrayList<Corrections> mCorrections;
+		public int mHalfScoreCount;
+		public long mCompletedDate;
+		public ArrayList<Correction> mCorrections;
+		
+		public void saveToDatabase(Context context) {
+			String fileName = saveCorrectionToFile(context);
+			
+			ContentValues values = new ContentValues();
+			values.put(GrammarProviderContract.TestResult.COLUMN_NAME_TEST_TYPE, mTestType);
+			values.put(GrammarProviderContract.TestResult.COLUMN_NAME_QUESTION_TYPE, mQuestionType);
+			values.put(GrammarProviderContract.TestResult.COLUMN_NAME_TEST_COUNT, mTotalCount);
+			values.put(GrammarProviderContract.TestResult.COLUMN_NAME_CORRECT_COUNT, mCorrectCount);
+			values.put(GrammarProviderContract.TestResult.COLUMN_NAME_INCORRECT_COUNT, mIncorrectCount);
+			values.put(GrammarProviderContract.TestResult.COLUMN_NAME_HALF_SCORE_COUNT, mHalfScoreCount);
+			values.put(GrammarProviderContract.TestResult.COLUMN_NAME_CORRECTION_FILE_PATH, fileName);
+			values.put(GrammarProviderContract.TestResult.COLUMN_NAME_COMPLETED_DATE, mCompletedDate);
+			
+			context.getContentResolver().insert(GrammarProviderContract.TestResult.CONTENT_URI, values);
+		}
+		
+		private String saveCorrectionToFile(Context context) {
+			String dirPath = context.getFilesDir().getAbsolutePath() + "/test_results";
+			File dir = new File(dirPath);
+			if( !dir.exists() && !dir.mkdirs()) {
+				Log.e(TAG, "failed to make dir for data file");
+				return null;
+			}
+			
+			Long now = Long.valueOf(System.currentTimeMillis());
+			
+			String fileName = dirPath + "/correction@" + now + ".xml";
+			File dataFile = new File(fileName);
+			
+			try {
+				dataFile.createNewFile();
+			} catch (IOException ex) {
+				Log.e(TAG, "failed to create data file", ex);
+				return null;
+			}
+			
+			FileOutputStream fos = null;
+			try{
+				fos = new FileOutputStream(dataFile);
+			}catch(FileNotFoundException e){
+				Log.e(TAG, "failed to create file output stream");
+				dataFile.delete();
+				return null;
+			}
+			
+			XmlSerializer serializer = Xml.newSerializer();
+			boolean done = false;
+			try {
+				serializer.setOutput(fos, "UTF-8");
+				serializer.startDocument("UTF-8", true);
+				serializer.setFeature("http://xmlpull.org/v1/doc/features.html#indent-output", true);
+				int correctionCount = mCorrections == null ? 0 : mCorrections.size();
+				serializer.startTag(null, "Corretions");
+				serializer.attribute(null, "count", String.valueOf(correctionCount));
+				
+				for (int i = 0; i < correctionCount; i++) {
+					Correction correction = mCorrections.get(i);
+					serializer.startTag(null, "Correction");
+					serializer.attribute(null, "number", String.valueOf(correction.mNumber));
+					serializer.attribute(null, "subject", correction.mSubject);
+					serializer.attribute(null, "answered", correction.mAnswered);
+					serializer.attribute(null, "correction", correction.mCorrection);
+					serializer.endTag(null, "Correction");
+				}
+				serializer.endTag(null, "Corretions");
+				serializer.endDocument();
+				serializer.flush();
+				done = true;
+			} catch (Exception ex) {
+				Log.e(TAG, "failed to data serialize", ex);
+				done = false;
+			}
+			
+			try {
+				if (fos != null)
+					fos.close();
+			} catch (IOException ex) {
+				Log.d(TAG, "failed to close file output stream");
+			}
+			
+			if (done) {
+				return fileName;
+			} else {
+				dataFile.delete();
+				return null;
+			}
+		}
 	}
 	
 	@Override

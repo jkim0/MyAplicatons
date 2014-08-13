@@ -71,5 +71,8 @@
     <string name="section_test_result_question">Question</string>
     <string name="section_test_result_answered">Answerd</string>
     <string name="section_test_result_correction">Correction</string>
+    <string name="msg_use_saved_dialog">There are already Test which is not finished.\n Do you want to continue?</string>
+    <string name="btn_label_yes">Yes</string>
+    <string name="btn_label_no">No</string>
 
 </resources>
