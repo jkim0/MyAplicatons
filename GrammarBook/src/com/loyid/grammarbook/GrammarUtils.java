@@ -1171,7 +1171,7 @@ public class GrammarUtils {
 		String subjFile = getTestFilePath(context, TYPE_TEST_SUBJECTIVE, -1);
 		
 		File f = null;
-		if (obj) {
+		if (subj || obj) {
 			f = new File(objMeanFile);
 			if (f.exists() && f.delete()) {
 				Log.d(TAG, "delete file = " + objMeanFile);
