@@ -2,17 +2,21 @@ package com.loyid.grammarbook;
 
 import java.text.Collator;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 
 import android.content.ContentProvider;
 import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.UriMatcher;
+import android.database.AbstractCursor;
 import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
+import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Log;
 
@@ -260,12 +264,42 @@ public class GrammarContentProvider extends ContentProvider {
 		
 		Cursor c = qb.query(db, projection, selection,
                 combine(prependArgs, selectionArgs), groupBy, null, sortOrder, limit);
-		
 		if (c != null) {
+			if (readBooleanQueryParameter(uri, GrammarProviderContract.GRAMMAR_BOOK_INDEX_EXTRAS, false)) {
+				Log.d(TAG, "wow");
+				Bundle bundle = getIndexExtras(db, qb, selection, selectionArgs, sortOrder);
+				//((AbstractCursor)c).setExtras(bundle);
+	        }
 			c.setNotificationUri(getContext().getContentResolver(), uri);
 		}
 		
 		return c;
+	}
+	
+	static boolean readBooleanQueryParameter(Uri uri, String parameter,
+			boolean defaultValue) {
+		// Manually parse the query, which is much faster than calling uri.getQueryParameter
+		String query = uri.getEncodedQuery();
+		if (query == null) {
+			return defaultValue;
+		}
+		
+		int index = query.indexOf(parameter);
+		if (index == -1) {
+			return defaultValue;
+		}
+		
+		index += parameter.length();
+		
+		return !matchQueryParameter(query, index, "=0", false)
+				&& !matchQueryParameter(query, index, "=false", true);
+	}
+	
+	private static boolean matchQueryParameter(String query, int index, String value,
+			boolean ignoreCase) {
+		int length = value.length();
+		return query.regionMatches(ignoreCase, index, value, 0, length)
+				&& (query.length() == index + length || query.charAt(index + length) == '&');
 	}
 	
 	private String[] combine(List<String> prepend, String[] userArgs) {
@@ -416,6 +450,111 @@ public class GrammarContentProvider extends ContentProvider {
 				mappingValues.put(GrammarProviderContract.Mappings.COLUMN_NAME_MEANING_ID, meaningId);
 				db.insert(GrammarProviderContract.Mappings.TABLE_NAME, null, mappingValues);
 			}
+		}
+	}
+	
+	private static final class GrammarIndexQuery {
+		public static final String LETTER = "letter";
+		public static final String TITLE = "title";
+		public static final String COUNT = "count";
+		
+		public static final String[] COLUMNS = new String[] {
+			LETTER, TITLE, COUNT
+		};
+		
+		public static final int COLUMN_LETTER = 0;
+		public static final int COLUMN_TITLE = 1;
+		public static final int COLUMN_COUNT = 2;
+		
+		// The first letter of the sort key column is what is used for the index headings.
+		public static final String SECTION_HEADING = "SUBSTR(%1$s,1,1)";
+		
+		public static final String ORDER_BY = LETTER + " COLLATE " + "PHONEBOOK";//PHONEBOOK_COLLATOR_NAME;
+	}
+	
+	private static Bundle getIndexExtras(final SQLiteDatabase db, final SQLiteQueryBuilder qb, final String selection, final String[] selectionArgs,
+			final String sortOrder) {
+		String sortKey;
+		
+		// The sort order suffix could be something like "DESC".
+		// We want to preserve it in the query even though we will change
+		// the sort column itself.
+		String sortOrderSuffix = "";
+		if (sortOrder != null) {
+			int spaceIndex = sortOrder.indexOf(' ');
+			if (spaceIndex != -1) {
+				sortKey = sortOrder.substring(0, spaceIndex);
+				sortOrderSuffix = sortOrder.substring(spaceIndex);
+			} else {
+				sortKey = sortOrder;
+			}
+		} else {
+			throw new IllegalArgumentException(
+					"The sortOrder is null.");
+		}
+		
+		HashMap<String, String> projectionMap = new HashMap<String, String>();//Maps.newHashMap();
+		String sectionHeading = String.format(Locale.US, GrammarIndexQuery.SECTION_HEADING, sortKey);
+		projectionMap.put(GrammarIndexQuery.LETTER,
+				sectionHeading + " AS " + GrammarIndexQuery.LETTER);
+		projectionMap.put(GrammarIndexQuery.TITLE,
+				"GET_PHONEBOOK_INDEX(" + sectionHeading + ",'" + Locale.getDefault().toString() + "')"
+						+ " AS " + GrammarIndexQuery.TITLE);
+		projectionMap.put(GrammarIndexQuery.COUNT,
+				"COUNT(*) AS " + GrammarIndexQuery.COUNT);
+		qb.setProjectionMap(projectionMap);
+		
+		Cursor indexCursor = qb.query(db, GrammarIndexQuery.COLUMNS, selection, selectionArgs,
+                GrammarIndexQuery.ORDER_BY, null /* having */,
+                GrammarIndexQuery.ORDER_BY + sortOrderSuffix);
+		
+		try {
+			int groupCount = indexCursor.getCount();
+			String titles[] = new String[groupCount];
+			int counts[] = new int[groupCount];
+			int indexCount = 0;
+			String currentTitle = null;
+			
+			// Since GET_PHONEBOOK_INDEX is a many-to-1 function, we may end up
+			// with multiple entries for the same title.  The following code
+			// collapses those duplicates.
+			for (int i = 0; i < groupCount; i++) {
+				indexCursor.moveToNext();
+				String title = indexCursor.getString(GrammarIndexQuery.COLUMN_TITLE);
+				if (title == null) {
+					title = "";
+				}
+				
+				int count = indexCursor.getInt(GrammarIndexQuery.COLUMN_COUNT);
+				if (indexCount == 0 || !TextUtils.equals(title, currentTitle)) {
+					titles[indexCount] = currentTitle = title;
+					counts[indexCount] = count;
+					indexCount++;
+				} else {
+					counts[indexCount - 1] += count;
+				}
+			}
+			
+			if (indexCount < groupCount) {
+				String[] newTitles = new String[indexCount];
+				System.arraycopy(titles, 0, newTitles, 0, indexCount);
+				titles = newTitles;
+				
+				int[] newCounts = new int[indexCount];
+				System.arraycopy(counts, 0, newCounts, 0, indexCount);
+				counts = newCounts;
+			}
+			
+			for (int j = 0; j < titles.length; j++) {
+				Log.d(TAG, "title = " + titles[j] + " counts = " + counts[j]);
+			}
+			
+			Bundle bundle = new Bundle();
+			bundle.putStringArray(GrammarProviderContract.EXTRA_GRAMMAR_BOOK_INDEX_TITLES, titles);
+			bundle.putIntArray(GrammarProviderContract.EXTRA_GRAMMAR_BOOK_INDEX_COUNTS, counts);
+			return bundle;
+		} finally {
+			indexCursor.close();
 		}
 	}
 }

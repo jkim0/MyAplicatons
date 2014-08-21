@@ -1,18 +1,17 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     tools:context="com.loyid.grammarbook.GrammarListActivity" >
 
     <item
         android:id="@+id/action_add"
         android:title="@string/action_add"
-        app:showAsAction="ifRoom"
+        android:showAsAction="ifRoom"
         android:icon="@drawable/ic_action_new"/>
     
     <item
         android:id="@+id/action_delete"
         android:title="@string/action_delete"
-        app:showAsAction="ifRoom"
+        android:showAsAction="ifRoom"
         android:icon="@drawable/ic_action_discard"/>
     
 </menu>

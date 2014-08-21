@@ -1,16 +1,15 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     tools:context="com.loyid.grammarbook.EditGrammarActivity" >
 
     <item
         android:id="@+id/action_done"
         android:title="@string/action_done"
-        app:showAsAction="ifRoom" android:icon="@drawable/ic_action_accept"/>
+        android:showAsAction="ifRoom" android:icon="@drawable/ic_action_accept"/>
     
     <item
         android:id="@+id/action_settings"
         android:title="@string/action_settings"
-        app:showAsAction="never"/>
+        android:showAsAction="never"/>
 
 </menu>

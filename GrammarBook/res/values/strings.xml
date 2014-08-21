@@ -74,5 +74,6 @@
     <string name="msg_use_saved_dialog">There are already Test which is not finished.\n Do you want to continue?</string>
     <string name="btn_label_yes">Yes</string>
     <string name="btn_label_no">No</string>
+    <string name="title_activity_test_list">TestListActivity</string>
 
 </resources>

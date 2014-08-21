@@ -27,6 +27,9 @@ public class MainActivity extends ActionBarActivity {
 		case R.id.btn_main_setting:
 			startActivity(new Intent(this, SettingsActivity.class));
 			break;
+		case R.id.btn_main_pinned:
+			startActivity(new Intent(this, TestListActivity.class));
+			break;
 		}
 	}
 }

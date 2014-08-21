@@ -7,6 +7,11 @@ import android.provider.BaseColumns;
 public final class GrammarProviderContract {
 	public static final String AUTHORITY = "com.loyid.grammarbook.provider";
 	
+	public static final String GRAMMAR_BOOK_INDEX_EXTRAS = "grammar_book_index_extras";
+	
+	public static final String EXTRA_GRAMMAR_BOOK_INDEX_TITLES = "grammar_book_index_titles";
+	public static final String EXTRA_GRAMMAR_BOOK_INDEX_COUNTS = "grammar_book_index_counts";
+	
 	private GrammarProviderContract() {}
 	
 	public static final String UNKNOWN_STRING = "<unknown>";
