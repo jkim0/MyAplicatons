@@ -30,6 +30,7 @@ public class DatabaseHelper extends SQLiteOpenHelper
 				+ GrammarProviderContract.Grammars._ID + " INTEGER PRIMARY KEY,"
 				+ GrammarProviderContract.Grammars.COLUMN_NAME_GRAMMAR + " TEXT NOT NULL,"
 				+ GrammarProviderContract.Grammars.COLUMN_NAME_MEANING + " TEXT,"
+				+ GrammarProviderContract.Grammars.COLUMN_NAME_SORT_KEY + " TEXT NOT NULL,"
 				+ GrammarProviderContract.Grammars.COLUMN_NAME_CREATED_DATE + " INTEGER,"
 				+ GrammarProviderContract.Grammars.COLUMN_NAME_MODIFIED_DATE + " INTEGER"
 				+ ");");
@@ -38,6 +39,7 @@ public class DatabaseHelper extends SQLiteOpenHelper
 				+ GrammarProviderContract.Meanings._ID + " INTEGER PRIMARY KEY,"
 				+ GrammarProviderContract.Meanings.COLUMN_NAME_WORD + " TEXT NOT NULL,"
 				+ GrammarProviderContract.Meanings.COLUMN_NAME_TYPE + " TEXT,"
+				+ GrammarProviderContract.Meanings.COLUMN_NAME_SORT_KEY + " TEXT NOT NULL,"
 				+ GrammarProviderContract.Meanings.COLUMN_NAME_CREATED_DATE + " INTEGER,"
 				+ GrammarProviderContract.Meanings.COLUMN_NAME_MODIFIED_DATE + " INTEGER,"
 				+ GrammarProviderContract.Meanings.COLUMN_NAME_REFER_COUNT + " INTEGER DEFAULT 0 NOT NULL"

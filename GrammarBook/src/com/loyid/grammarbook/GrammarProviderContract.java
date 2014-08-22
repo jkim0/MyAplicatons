@@ -83,6 +83,10 @@ public final class GrammarProviderContract {
 		 * The table name offered by this provider
 		 */
 		public static final String SCHEME = "content://";
+		
+		public static final String COLUMN_NAME_SORT_KEY = "sort_key";
+		
+		public static final String DEFAULT_SORT_ORDER = COLUMN_NAME_SORT_KEY + " ASC"; //ASC or DESC
 	}
 	
 	public static final class TestResult extends GBaseColumns {
@@ -210,11 +214,6 @@ public final class GrammarProviderContract {
 		public static final String COLUMN_NAME_MODIFIED_DATE = "modified";
 		
 		public static final String COLUMN_NAME_REFER_COUNT = "refer_count";
-		
-		/**
-		 * The default sort order for this table
-		 */
-		public static final String DEFAULT_SORT_ORDER = COLUMN_NAME_TYPE + " ASC"; //ASC or DESC
 	}
 	
 	public static final class Mappings extends GBaseColumns {
@@ -348,10 +347,5 @@ public final class GrammarProviderContract {
 		 * <P>Type: INTEGER (long from System.curentTimeMillis())</P>
 		 */	
 		public static final String COLUMN_NAME_MODIFIED_DATE = "modified";
-		
-		/**
-        * The default sort order for this table
-         */
-		public static final String DEFAULT_SORT_ORDER = COLUMN_NAME_GRAMMAR + " ASC"; //ASC or DESC
 	}
 }

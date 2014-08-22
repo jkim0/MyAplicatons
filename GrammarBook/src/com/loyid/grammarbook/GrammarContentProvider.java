@@ -142,6 +142,12 @@ public class GrammarContentProvider extends ContentProvider {
 			values.put(GrammarProviderContract.Grammars.COLUMN_NAME_MODIFIED_DATE, now);
 		}
 		
+		if (values.containsKey(GrammarProviderContract.Grammars.COLUMN_NAME_SORT_KEY) == false) {
+			String grammar = values.getAsString(GrammarProviderContract.Grammars.COLUMN_NAME_GRAMMAR);
+			String initial = GrammarUtils.getInitialFromString(grammar, Locale.ENGLISH);
+			values.put(GrammarProviderContract.Grammars.COLUMN_NAME_SORT_KEY, initial);
+		}
+		
 		long rowId;
 		db.beginTransaction();
 		
@@ -266,9 +272,8 @@ public class GrammarContentProvider extends ContentProvider {
                 combine(prependArgs, selectionArgs), groupBy, null, sortOrder, limit);
 		if (c != null) {
 			if (readBooleanQueryParameter(uri, GrammarProviderContract.GRAMMAR_BOOK_INDEX_EXTRAS, false)) {
-				Log.d(TAG, "wow");
 				Bundle bundle = getIndexExtras(db, qb, selection, selectionArgs, sortOrder);
-				//((AbstractCursor)c).setExtras(bundle);
+				((AbstractCursor)c).setExtras(bundle);
 	        }
 			c.setNotificationUri(getContext().getContentResolver(), uri);
 		}
@@ -403,6 +408,8 @@ public class GrammarContentProvider extends ContentProvider {
 				ContentValues meanValues = new ContentValues();
 				meanValues.put(GrammarProviderContract.Meanings.COLUMN_NAME_TYPE, type);
 				meanValues.put(GrammarProviderContract.Meanings.COLUMN_NAME_WORD, meaning);
+				String initial = GrammarUtils.getInitialFromString(meaning, Locale.KOREAN);
+				meanValues.put(GrammarProviderContract.Meanings.COLUMN_NAME_SORT_KEY, initial);
 				
 				String whereClause = GrammarProviderContract.Mappings.COLUMN_NAME_GRAMMAR_ID + " = ?";
 				String[] whereArgs = { String.valueOf(grammarId) };
@@ -431,7 +438,7 @@ public class GrammarContentProvider extends ContentProvider {
 					
 					cursor.close();
 				}
-
+				
 				if (meaningId < 0) {
 					Log.d(TAG, "insert meaning");
 					meanValues.put(GrammarProviderContract.Meanings.COLUMN_NAME_CREATED_DATE, timeStamp);
@@ -454,22 +461,17 @@ public class GrammarContentProvider extends ContentProvider {
 	}
 	
 	private static final class GrammarIndexQuery {
-		public static final String LETTER = "letter";
-		public static final String TITLE = "title";
+		public static final String INITIAL = "initial";
 		public static final String COUNT = "count";
 		
 		public static final String[] COLUMNS = new String[] {
-			LETTER, TITLE, COUNT
+			INITIAL, COUNT
 		};
 		
-		public static final int COLUMN_LETTER = 0;
-		public static final int COLUMN_TITLE = 1;
-		public static final int COLUMN_COUNT = 2;
+		public static final int COLUMN_INITIAL = 0;
+		public static final int COLUMN_COUNT = 1;
 		
-		// The first letter of the sort key column is what is used for the index headings.
-		public static final String SECTION_HEADING = "SUBSTR(%1$s,1,1)";
-		
-		public static final String ORDER_BY = LETTER + " COLLATE " + "PHONEBOOK";//PHONEBOOK_COLLATOR_NAME;
+		public static final String ORDER_BY = INITIAL + " COLLATE LOCALIZED";
 	}
 	
 	private static Bundle getIndexExtras(final SQLiteDatabase db, final SQLiteQueryBuilder qb, final String selection, final String[] selectionArgs,
@@ -479,27 +481,22 @@ public class GrammarContentProvider extends ContentProvider {
 		// The sort order suffix could be something like "DESC".
 		// We want to preserve it in the query even though we will change
 		// the sort column itself.
+		String order = sortOrder == null ? GrammarProviderContract.GBaseColumns.DEFAULT_SORT_ORDER : sortOrder;
+		
 		String sortOrderSuffix = "";
-		if (sortOrder != null) {
-			int spaceIndex = sortOrder.indexOf(' ');
+		if (order != null) {
+			int spaceIndex = order.indexOf(' ');
 			if (spaceIndex != -1) {
-				sortKey = sortOrder.substring(0, spaceIndex);
+				sortKey = order.substring(0, spaceIndex);
 				sortOrderSuffix = sortOrder.substring(spaceIndex);
 			} else {
-				sortKey = sortOrder;
+				sortKey = order;
 			}
-		} else {
-			throw new IllegalArgumentException(
-					"The sortOrder is null.");
 		}
 		
-		HashMap<String, String> projectionMap = new HashMap<String, String>();//Maps.newHashMap();
-		String sectionHeading = String.format(Locale.US, GrammarIndexQuery.SECTION_HEADING, sortKey);
-		projectionMap.put(GrammarIndexQuery.LETTER,
-				sectionHeading + " AS " + GrammarIndexQuery.LETTER);
-		projectionMap.put(GrammarIndexQuery.TITLE,
-				"GET_PHONEBOOK_INDEX(" + sectionHeading + ",'" + Locale.getDefault().toString() + "')"
-						+ " AS " + GrammarIndexQuery.TITLE);
+		HashMap<String, String> projectionMap = new HashMap<String, String>();
+		projectionMap.put(GrammarIndexQuery.INITIAL,
+				GrammarProviderContract.GBaseColumns.COLUMN_NAME_SORT_KEY + " AS " + GrammarIndexQuery.INITIAL);
 		projectionMap.put(GrammarIndexQuery.COUNT,
 				"COUNT(*) AS " + GrammarIndexQuery.COUNT);
 		qb.setProjectionMap(projectionMap);
@@ -510,24 +507,24 @@ public class GrammarContentProvider extends ContentProvider {
 		
 		try {
 			int groupCount = indexCursor.getCount();
-			String titles[] = new String[groupCount];
+			String initials[] = new String[groupCount];
 			int counts[] = new int[groupCount];
 			int indexCount = 0;
-			String currentTitle = null;
+			String currentInitial = null;
 			
 			// Since GET_PHONEBOOK_INDEX is a many-to-1 function, we may end up
 			// with multiple entries for the same title.  The following code
 			// collapses those duplicates.
 			for (int i = 0; i < groupCount; i++) {
 				indexCursor.moveToNext();
-				String title = indexCursor.getString(GrammarIndexQuery.COLUMN_TITLE);
-				if (title == null) {
-					title = "";
+				String initial = indexCursor.getString(GrammarIndexQuery.COLUMN_INITIAL);
+				if (initial == null) {
+					initial = "";
 				}
 				
 				int count = indexCursor.getInt(GrammarIndexQuery.COLUMN_COUNT);
-				if (indexCount == 0 || !TextUtils.equals(title, currentTitle)) {
-					titles[indexCount] = currentTitle = title;
+				if (indexCount == 0 || !TextUtils.equals(initial, currentInitial)) {
+					initials[indexCount] = currentInitial = initial;
 					counts[indexCount] = count;
 					indexCount++;
 				} else {
@@ -536,21 +533,17 @@ public class GrammarContentProvider extends ContentProvider {
 			}
 			
 			if (indexCount < groupCount) {
-				String[] newTitles = new String[indexCount];
-				System.arraycopy(titles, 0, newTitles, 0, indexCount);
-				titles = newTitles;
+				String[] newInitials = new String[indexCount];
+				System.arraycopy(initials, 0, newInitials, 0, indexCount);
+				initials = newInitials;
 				
 				int[] newCounts = new int[indexCount];
 				System.arraycopy(counts, 0, newCounts, 0, indexCount);
 				counts = newCounts;
 			}
 			
-			for (int j = 0; j < titles.length; j++) {
-				Log.d(TAG, "title = " + titles[j] + " counts = " + counts[j]);
-			}
-			
 			Bundle bundle = new Bundle();
-			bundle.putStringArray(GrammarProviderContract.EXTRA_GRAMMAR_BOOK_INDEX_TITLES, titles);
+			bundle.putStringArray(GrammarProviderContract.EXTRA_GRAMMAR_BOOK_INDEX_TITLES, initials);
 			bundle.putIntArray(GrammarProviderContract.EXTRA_GRAMMAR_BOOK_INDEX_COUNTS, counts);
 			return bundle;
 		} finally {

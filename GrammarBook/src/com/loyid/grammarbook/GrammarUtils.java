@@ -13,6 +13,7 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Locale;
 
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
@@ -1189,5 +1190,27 @@ public class GrammarUtils {
 				Log.d(TAG, "delete file = " + subjFile);
 			}
 		}
+	}
+	
+	private static final String ENGLISH_LANGUAGE = Locale.ENGLISH.getLanguage().toLowerCase();
+	private static final String KOREAN_LANGUAGE = Locale.KOREAN.getLanguage().toLowerCase();
+	private static final String[] KOREAN_INITIAL = {"ㄱ", "ㄱ"/*"ㄲ"*/,"ㄴ","ㄷ","ㄷ"/*"ㄸ"*/,
+		"ㄹ","ㅁ","ㅂ","ㅂ"/*"ㅃ"*/,"ㅅ","ㅅ"/*"ㅆ"*/,"ㅇ","ㅈ","ㅈ"/*"ㅉ"*/,"ㅊ","ㅋ","ㅌ","ㅍ","ㅎ"};
+	
+	public static String getInitialFromString(String value, Locale locale) {
+		String language = locale.getLanguage().toString();
+		String initial = "#";
+		if (language.equals(ENGLISH_LANGUAGE)) {
+			initial = value.substring(0, 1);
+		} else if (language.equals(KOREAN_LANGUAGE)) {
+			final int index = (value.charAt(0) - 44032) / (21 * 28);
+			if (index >= 0 && index < KOREAN_INITIAL.length) {
+				initial = KOREAN_INITIAL[index];
+			}
+		} else {
+			throw new IllegalArgumentException("Unsopported language : " + language);
+		}
+		
+		return initial;
 	}
 }

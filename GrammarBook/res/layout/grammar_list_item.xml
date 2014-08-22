@@ -6,6 +6,25 @@
     android:background="?android:attr/activatedBackgroundIndicator"
     android:orientation="vertical" >
 
+    <RelativeLayout
+        android:id="@+id/section_area"
+        android:visibility="gone"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/list_section_height" >
+        
+        <TextView
+            android:id="@+id/header_text"
+            android:layout_width="56dip"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_centerVertical="true"
+            android:gravity="center"
+            android:textColor="@color/section_header_text_color"
+            android:textSize="14sp"
+            android:textStyle="bold" />
+    
+    </RelativeLayout>
+
     <TextView
         android:id="@+id/grammar"
         android:layout_marginBottom="5dp"
