@@ -9,8 +9,9 @@ public class GrammarSectionIndexer implements SectionIndexer {
 	private static final String TAG = "GrammarSectionIndexer";
 	
 	private String[] mSections;
+	private int[] mCounts;
 	private int[] mPositions;
-	private int mCount;
+	private int mTotalCount;
 	private static final String BLANK_HEADER_STRING = " ";
 
 	public GrammarSectionIndexer(String[] sections, int[] counts) {
@@ -24,6 +25,7 @@ public class GrammarSectionIndexer implements SectionIndexer {
 		}
 
 		mSections = sections;
+		mCounts = counts;
 		mPositions = new int[counts.length];
 
 		int position = 0;
@@ -38,7 +40,7 @@ public class GrammarSectionIndexer implements SectionIndexer {
 			position += counts[i];
 		}
 
-		mCount = position;
+		mTotalCount = position;
 	}
 
 	@Override
@@ -49,10 +51,14 @@ public class GrammarSectionIndexer implements SectionIndexer {
 
 		return mPositions[section];
 	}
+	
+	public int getCountForSection(int section) {
+		return mCounts[section];
+	}
 
 	@Override
 	public int getSectionForPosition(int position) {
-		if (position < 0 || position >= mCount) {
+		if (position < 0 || position >= mTotalCount) {
 			return -1;
 		}
 

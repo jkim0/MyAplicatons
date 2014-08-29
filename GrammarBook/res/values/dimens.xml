@@ -5,5 +5,9 @@
     <dimen name="activity_vertical_margin">16dp</dimen>
     
     <dimen name="list_section_height">25dip</dimen>
+    
+    <dimen name="grammar_list_item_text_indent">8dip</dimen>
+    
+    <dimen name="list_visible_scrollbar_padding">10dip</dimen>
 
 </resources>

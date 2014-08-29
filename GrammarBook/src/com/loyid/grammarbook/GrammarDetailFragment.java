@@ -60,45 +60,19 @@ public class GrammarDetailFragment extends Fragment {
 			loadGrammarInfo(getArguments().getLong(ARG_GRAMMAR_ID, -1));
 		}
 	}
-
-	@Override
-	public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-		// TODO Auto-generated method stub
-		inflater.inflate(R.menu.grammar_detail, menu);
-		super.onCreateOptionsMenu(menu, inflater);
-	}
-
-	@Override
-	public boolean onOptionsItemSelected(MenuItem item) {
-		// TODO Auto-generated method stub		
-		int id = item.getItemId();
-		if (id == R.id.action_edit) {
-			editCurrentGrammar();
-		} else if (id == R.id.action_delete) {
-			deleteCurrentGrammar();
-		}
-		
-		return super.onOptionsItemSelected(item);
-	}
 	
-	private void deleteCurrentGrammar() {
+	public void deleteCurrentGrammar() {
 		boolean result = GrammarUtils.deleteGrammar(getActivity(), mGrammarId);
 		Log.d(TAG, "deleteCurrentGrammar result = " + result);
 		getActivity().finish();
 	}
 	
-	private void editCurrentGrammar() {
+	public void editCurrentGrammar() {
 		long grammarId = getArguments().getLong(ARG_GRAMMAR_ID, -1);
 		Intent editIntent = new Intent(getActivity(), EditGrammarActivity.class);
 		editIntent.putExtra(EditGrammarActivity.EXTRA_GRAMMAR_ID, grammarId);
 		
 		startActivity(editIntent);
-	}
-
-	@Override
-	public void onPrepareOptionsMenu(Menu menu) {
-		// TODO Auto-generated method stub
-		super.onPrepareOptionsMenu(menu);
 	}
 
 	@Override

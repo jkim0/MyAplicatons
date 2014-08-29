@@ -1,9 +1,13 @@
 package com.loyid.grammarbook;
 
+import android.content.DialogInterface;
 import android.content.res.Configuration;
 import android.os.Bundle;
 import android.app.Activity;
+import android.app.Fragment;
+import android.app.FragmentTransaction;
 import android.util.Log;
+import android.view.Menu;
 import android.view.MenuItem;
 
 /**
@@ -17,6 +21,8 @@ import android.view.MenuItem;
 public class GrammarDetailActivity extends Activity {
 	private static final String TAG = "GrammarDetailActivity";
 
+	private GrammarDetailFragment mFragment;
+	
 	@Override
 	public void onConfigurationChanged(Configuration newConfig) {
 		// TODO Auto-generated method stub
@@ -57,23 +63,65 @@ public class GrammarDetailActivity extends Activity {
 			fragment.setArguments(arguments);
 			getFragmentManager().beginTransaction()
 					.add(R.id.grammar_detail_container, fragment).commit();
+			mFragment = fragment;
 		}
 	}
 
 	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		getMenuInflater().inflate(R.menu.grammar_detail, menu);
+		return super.onCreateOptionsMenu(menu);
+	}
+	
+	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
 		int id = item.getItemId();
-		if (id == android.R.id.home) {
-			// This ID represents the Home or Up button. In the case of this
-			// activity, the Up button is shown. For
-			// more details, see the Navigation pattern on Android Design:
-			//
-			// http://developer.android.com/design/patterns/navigation.html#up-vs-back
-			//
-			//NavUtils.navigateUpFromSameTask(this);
+		if (id == R.id.action_edit) {
+			editCurrentGrammar();
+			return true;
+		} else if (id == R.id.action_delete) {
+			showConfirmDialog();
+			return true;
+		} else if (id == android.R.id.home) {
 			finish();
 			return true;
 		}
 		return super.onOptionsItemSelected(item);
+	}
+	
+	private void editCurrentGrammar() {
+		if (mFragment != null) {
+			mFragment.editCurrentGrammar();
+		}
+	}
+	
+	private void showConfirmDialog() {
+		FragmentTransaction ft = getFragmentManager().beginTransaction();
+		Fragment prev = getFragmentManager().findFragmentByTag("dialog");
+		if (prev != null) {
+			ft.remove(prev);
+		}
+		
+		ft.addToBackStack(null);
+		
+		// Create and show the dialog.
+		GrammarDialogFragment newFragment = GrammarDialogFragment.newInstance(GrammarDialogFragment.DIALOG_TYPE_YES_NO);
+		newFragment.setOnClickListener(new DialogInterface.OnClickListener() {
+			@Override
+			public void onClick(DialogInterface dialog, int which) {
+				if (which == DialogInterface.BUTTON_POSITIVE) {
+					deleteCurrentGrammar();
+				}				
+			}			
+		});
+		Bundle args = newFragment.getArguments();
+		args.putString(GrammarDialogFragment.FRAGMENT_ARGS_MESSAGE, getString(R.string.msg_delete_grammar_dialog));
+		newFragment.show(ft, "dialog");
+	}
+	
+	private void deleteCurrentGrammar() {
+		if (mFragment != null) {
+			mFragment.deleteCurrentGrammar();
+		}
 	}
 }

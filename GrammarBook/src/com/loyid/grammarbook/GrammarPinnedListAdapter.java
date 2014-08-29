@@ -9,23 +9,28 @@ import android.util.Log;
 import android.util.SparseArray;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.CursorAdapter;
 import android.widget.ListView;
 import android.widget.ResourceCursorAdapter;
 import android.widget.SectionIndexer;
 import android.widget.TextView;
 
-public class GrammarPinnedListAdapter extends ResourceCursorAdapter implements SectionIndexer {
+public class GrammarPinnedListAdapter extends CursorAdapter implements
+		SectionIndexer {
 	private static final String TAG = "GrammarPinnedListAdapter";
-	
+
 	private GrammarSectionIndexer mIndexer;
-	
+
 	private boolean mSectionHeaderDisplayEnabled = true;
+	
+	private boolean mSelectionVisible;
 
 	public static final class Placement {
 		private int position = ListView.INVALID_POSITION;
 		public boolean firstInSection;
 		public boolean lastInSection;
 		public String sectionHeader;
+		public int count;
 
 		public void invalidate() {
 			position = ListView.INVALID_POSITION;
@@ -34,8 +39,8 @@ public class GrammarPinnedListAdapter extends ResourceCursorAdapter implements S
 
 	private Placement mPlacementCache = new Placement();
 
-	public GrammarPinnedListAdapter(Context context, int layout, Cursor c) {
-		super(context, layout, c);
+	public GrammarPinnedListAdapter(Context context, Cursor c) {
+		super(context, c);
 
 		updateSectionIndexer(c);
 	}
@@ -71,8 +76,8 @@ public class GrammarPinnedListAdapter extends ResourceCursorAdapter implements S
 	@Override
 	public void bindView(View view, Context context, Cursor cursor) {
 		final ListItemCache cache = (ListItemCache) view.getTag();
+		final GrammarListItemView itemView = (GrammarListItemView)view;
 		String grammar = cursor.getString(cache.grammarColumnIndex);
-		cache.grammar.setText(grammar);
 		String strMeaning = cursor.getString(cache.meaningColumnIndex);
 
 		String[] group = strMeaning
@@ -104,9 +109,7 @@ public class GrammarPinnedListAdapter extends ResourceCursorAdapter implements S
 		for (int j = 0; j < array.size(); j++) {
 			int type = array.keyAt(j);
 			items = array.get(type);
-			sb.append("-"
-					+ GrammarUtils.getTypeString(mContext, type)
-					+ " : ");
+			sb.append("-" + GrammarUtils.getTypeString(mContext, type) + " : ");
 			for (int k = 0; k < items.size(); k++) {
 				sb.append(items.get(k));
 				if (k < items.size() - 1)
@@ -117,21 +120,31 @@ public class GrammarPinnedListAdapter extends ResourceCursorAdapter implements S
 				sb.append("   ");
 
 		}
-		cache.meaning.setText(sb.toString());
-		
-		int position = cursor.getPosition();
-		Placement placement = getItemPlacementInSection(position);
-		if (isSectionHeaderDisplayEnabled() && placement.firstInSection) {
-			cache.sectionArea.setVisibility(View.VISIBLE);
-			cache.section.setText(placement.sectionHeader);
+		itemView.setText(grammar, sb.toString());
+		bindSectionHeaderAndDivider(itemView, cursor.getPosition());
+	}
+
+	protected void bindSectionHeaderAndDivider(GrammarListItemView view, int position) {
+		if (isSectionHeaderDisplayEnabled()) {
+			Placement placement = getItemPlacementInSection(position);
+			if (placement.count >= 0) {
+				view.setCountView(""+placement.count);
+			} else {
+				view.setCountView(null);
+			}
+			view.setSectionHeader(placement.sectionHeader);
+			view.setDividerVisible(!placement.lastInSection);
 		} else {
-			cache.sectionArea.setVisibility(View.GONE);
+			view.setSectionHeader(null);
+			view.setDividerVisible(true);
+			view.setCountView(null);
 		}
 	}
 
 	@Override
 	public View newView(Context context, Cursor cursor, ViewGroup parent) {
-		View view = super.newView(context, cursor, parent);
+		GrammarListItemView view = new GrammarListItemView(context, null);
+		view.setActivatedStateSupported(isSelectionVisible());
 		ListItemCache cache = new ListItemCache();
 		if (cache.grammarColumnIndex < 0) {
 			cache.grammarColumnIndex = cursor
@@ -142,10 +155,6 @@ public class GrammarPinnedListAdapter extends ResourceCursorAdapter implements S
 			cache.meaningColumnIndex = cursor
 					.getColumnIndex(GrammarProviderContract.Grammars.COLUMN_NAME_MEANING);
 		}
-		cache.grammar = (TextView) view.findViewById(R.id.grammar);
-		cache.meaning = (TextView) view.findViewById(R.id.meaning);
-		cache.sectionArea = view.findViewById(R.id.section_area);
-		cache.section = (TextView) view.findViewById(R.id.header_text);
 		view.setTag(cache);
 
 		return view;
@@ -153,11 +162,7 @@ public class GrammarPinnedListAdapter extends ResourceCursorAdapter implements S
 
 	private class ListItemCache {
 		public int grammarColumnIndex = -1;
-		public TextView grammar;
 		public int meaningColumnIndex = -1;
-		public TextView meaning;
-		public View sectionArea;
-		public TextView section;
 	}
 
 	public void setIndexer(GrammarSectionIndexer indexer) {
@@ -197,6 +202,14 @@ public class GrammarPinnedListAdapter extends ResourceCursorAdapter implements S
 		return mIndexer.getSections();
 	}
 
+	private int getCountForSection(int section) {
+		if (mIndexer == null) {
+			return -1;
+		}
+
+		return mIndexer.getCountForSection(section);
+	}
+
 	public Placement getItemPlacementInSection(int position) {
 		if (mPlacementCache.position == position) {
 			return mPlacementCache;
@@ -208,9 +221,11 @@ public class GrammarPinnedListAdapter extends ResourceCursorAdapter implements S
 			if (section != -1 && getPositionForSection(section) == position) {
 				mPlacementCache.firstInSection = true;
 				mPlacementCache.sectionHeader = (String) getSections()[section];
+				mPlacementCache.count = getCountForSection(section);
 			} else {
 				mPlacementCache.firstInSection = false;
 				mPlacementCache.sectionHeader = null;
+				mPlacementCache.count = -1;
 			}
 
 			mPlacementCache.lastInSection = (getPositionForSection(section + 1) - 1 == position);
@@ -218,6 +233,7 @@ public class GrammarPinnedListAdapter extends ResourceCursorAdapter implements S
 			mPlacementCache.firstInSection = false;
 			mPlacementCache.lastInSection = false;
 			mPlacementCache.sectionHeader = null;
+			mPlacementCache.count = -1;
 		}
 
 		return mPlacementCache;
@@ -229,5 +245,13 @@ public class GrammarPinnedListAdapter extends ResourceCursorAdapter implements S
 
 	public void setSectionHeaderDisplayEnabled(boolean flag) {
 		this.mSectionHeaderDisplayEnabled = flag;
+	}
+	
+	public boolean isSelectionVisible() {
+		return mSelectionVisible;
+	}
+
+	public void setSelectionVisible(boolean visible) {
+		this.mSelectionVisible = visible;
 	}
 }

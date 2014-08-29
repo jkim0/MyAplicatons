@@ -1,4 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="section_header_text_color">#ff999999</color>
+    
+    <!-- Divider color for header separator -->
+    <color name="secondary_header_separator_color">#D0D0D0</color>
+
+    <!-- Color of the theme of the People app -->
+    <color name="people_app_theme_color">#363636</color>
+    
 </resources>

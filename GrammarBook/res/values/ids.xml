@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <item type="id" name="gliv_main_textview"/>
+    <item type="id" name="gliv_sub_textview"/>
+</resources>

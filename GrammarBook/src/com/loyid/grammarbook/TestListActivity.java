@@ -28,7 +28,7 @@ public class TestListActivity extends ListActivity {
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		
+		getListView().setDividerHeight(0);
 		loadGrammarList();
 	}
 
@@ -66,7 +66,7 @@ public class TestListActivity extends ListActivity {
 		
 		if (cursor != null) {
 			Log.e(TAG, "loadGrammarList cursor count = " + cursor.getCount());
-			mAdapter = new GrammarPinnedListAdapter(this, R.layout.grammar_list_item, cursor);
+			mAdapter = new GrammarPinnedListAdapter(this, cursor);
 		} else {
 			Log.e(TAG, "loadGrammarList cursor is null");
 		}
